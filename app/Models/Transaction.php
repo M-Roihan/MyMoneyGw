@@ -40,7 +40,7 @@ class Transaction extends Model
     }
 
     // Transaksi ini (jika ada) terhubung ke satu target Tabungan
-    public function saving(): BelongsTo
+    public function savingTarget(): BelongsTo
     {
         return $this->belongsTo(Saving::class);
     }

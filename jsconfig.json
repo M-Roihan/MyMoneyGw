@@ -1,10 +1,15 @@
 {
     "compilerOptions": {
         "baseUrl": ".",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "jsx": "react-jsx",
+        "ignoreDeprecations": "6.0",
         "paths": {
             "@/*": ["resources/js/*"],
             "ziggy-js": ["./vendor/tightenco/ziggy"]
         }
     },
-    "exclude": ["node_modules", "public"]
+    "include": ["resources/js/**/*"],
+    "exclude": ["node_modules", "public", "vendor"]
 }

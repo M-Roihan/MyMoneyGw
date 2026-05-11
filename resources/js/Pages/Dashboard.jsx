@@ -46,6 +46,16 @@ function formatDateLabel(dateStr) {
     return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+function LogoutIcon() {
+    return (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+    );
+}
+
 function ArrowUpIcon() {
     return (
         <svg
@@ -371,6 +381,23 @@ export default function AplikasiKeuangan() {
         .reduce((s, t) => s + t.amount, 0);
     const balance = totalIncome - totalExpense;
 
+    async function handleLogout() {
+        if (!window.confirm("Yakin ingin keluar?")) return;
+        try {
+            await fetch("/logout", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || "",
+                    Accept: "application/json",
+                },
+            });
+        } catch (e) {
+            console.error(e);
+        } finally {
+            window.location.href = "/login";
+        }
+    }
+    
     async function handleAddTransaction() {
         if (
             !form.category_id ||
@@ -457,6 +484,7 @@ export default function AplikasiKeuangan() {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
                 * { box-sizing: border-box; margin: 0; padding: 0; }
+                .logout-btn:hover { background: rgba(255,255,255,0.25) !important; }
                 .tx-row:hover { background: #f9fafb !important; }
                 .nav-btn:hover { background: #f3f4f6 !important; }
                 .filter-opt:hover { background: #f3f4f6 !important; }
@@ -600,7 +628,27 @@ export default function AplikasiKeuangan() {
                             ))}
                         </div>
                     )}
+                    
                 </div>
+                {/* Logout Button */}
+                <button
+                    className="logout-btn"
+                    onClick={handleLogout}
+                    style={{
+                        display: "flex", alignItems: "center", gap: "6px",
+                        padding: "9px 16px",
+                        border: "1.5px solid rgba(255,255,255,0.3)",
+                        borderRadius: "10px",
+                        background: "rgba(255,255,255,0.1)",
+                        fontSize: "14px", fontWeight: 600, color: "#fff",
+                        cursor: "pointer", fontFamily: "inherit",
+                        transition: "background 0.15s",
+                        flexShrink: 0,
+                    }}
+                >
+                    <LogoutIcon />
+                    Keluar
+                </button>
             </div>
 
             <div

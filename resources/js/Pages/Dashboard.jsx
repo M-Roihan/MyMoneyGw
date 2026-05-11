@@ -478,7 +478,8 @@ export default function AplikasiKeuangan() {
             {/* Header */}
             <div
                 style={{
-                    background: "linear-gradient(135deg, #1e40af 0%, #2563eb 100%)",
+                    background:
+                        "linear-gradient(135deg, #1e40af 0%, #2563eb 100%)",
                     borderBottom: "none",
                     padding: "0 32px",
                     height: "64px",
@@ -504,7 +505,9 @@ export default function AplikasiKeuangan() {
                 >
                     <span style={{ color: "#fff" }}>Finance</span>
                     <span style={{ color: "#e0e7ff" }}>Ku</span>
-                    <span style={{ color: "#e0e7ff", marginLeft: "2px" }}>.</span>
+                    <span style={{ color: "#e0e7ff", marginLeft: "2px" }}>
+                        .
+                    </span>
                 </div>
                 <div
                     style={{

@@ -14,6 +14,8 @@ Route::get('/', function () {
     return Inertia::render('Dashboard');
 });
 
+Route::redirect('/', '/login');
+
 // --- BAGIAN RUTE BARU (REGISTRASI) ---
 // Kita letakkan di sini agar bisa diakses oleh pengunjung sebelum login
 Route::get('register', [RegisteredUserController::class, 'create'])->name('register');

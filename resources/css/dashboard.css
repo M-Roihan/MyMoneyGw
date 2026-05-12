@@ -1,0 +1,136 @@
+/* resources/css/dashboard.css */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafc;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-pad {
+    padding: 40px;
+}
+
+/* --- GRID LAYOUT --- */
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.grid-2-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 32px;
+}
+
+/* --- CARDS --- */
+.action-card {
+    padding: 32px;
+    border-radius: 32px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.action-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+.card-dark {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-light {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+}
+
+.tx-item {
+    background: #fff;
+    padding: 20px 24px;
+    border-radius: 24px;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* --- BUTTONS --- */
+.btn-primary {
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    transform: scale(1.02);
+}
+
+.btn-icon {
+    border: none;
+    background: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- MODAL & FORMS --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-box {
+    background: #fff;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 32px;
+    padding: 32px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #2563eb;
+}

@@ -36,6 +36,6 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         // Redirect ke Dashboard (Modul 1.3.3)
-        return redirect()->intended('/');
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 }

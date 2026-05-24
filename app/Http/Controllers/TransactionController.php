@@ -7,9 +7,38 @@ use App\Models\Category;
 use App\Models\Account;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
+    /**
+     * Ringkasan saldo (real-time via polling di frontend)
+     */
+    public function saldo()
+    {
+        $userId = Auth::id();
+
+
+        $pemasukan = Transaction::where('user_id', $userId)
+            ->where('type', 'pemasukan')
+            ->sum('amount');
+
+        $pengeluaran = Transaction::where('user_id', $userId)
+            ->where('type', 'pengeluaran')
+            ->sum('amount');
+
+        $totalSaldo = (float) $pemasukan - (float) $pengeluaran;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'pemasukan' => (float) $pemasukan,
+                'pengeluaran' => (float) $pengeluaran,
+                'total_saldo' => $totalSaldo,
+            ],
+        ]);
+    }
+
     /**
      * Ambil semua transaksi user yang login
      */
@@ -144,6 +173,98 @@ class TransactionController extends Controller
         return response()->json([
             'success' => true,
             'data' => $transactions
+        ]);
+    }
+
+    /**
+     * Data Summary untuk Dashboard
+     */
+    public function dashboardSummary()
+    {
+        $userId = Auth::id();
+        $now = Carbon::now();
+
+        // 1. Saldo Total
+        $totalPemasukan = Transaction::where('user_id', $userId)->where('type', 'pemasukan')->sum('amount');
+        $totalPengeluaran = Transaction::where('user_id', $userId)->where('type', 'pengeluaran')->sum('amount');
+        $saldoTotal = (float)$totalPemasukan - (float)$totalPengeluaran;
+
+        // 2. Bulan Ini
+        $pemasukanBulanIni = Transaction::where('user_id', $userId)
+            ->where('type', 'pemasukan')
+            ->whereMonth('transaction_date', $now->month)
+            ->whereYear('transaction_date', $now->year)
+            ->sum('amount');
+
+        $pengeluaranBulanIni = Transaction::where('user_id', $userId)
+            ->where('type', 'pengeluaran')
+            ->whereMonth('transaction_date', $now->month)
+            ->whereYear('transaction_date', $now->year)
+            ->sum('amount');
+
+        // 3. Transaksi Terbaru
+        $transaksiTerbaru = Transaction::where('user_id', $userId)
+            ->with(['category', 'account'])
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // 4. Pengeluaran per Kategori (Bulan Ini)
+        $pengeluaranPerKategoriRaw = Transaction::where('user_id', $userId)
+            ->where('type', 'pengeluaran')
+            ->whereMonth('transaction_date', $now->month)
+            ->whereYear('transaction_date', $now->year)
+            ->selectRaw('category_id, sum(amount) as total')
+            ->groupBy('category_id')
+            ->with('category')
+            ->get();
+
+        $pengeluaranPerKategori = $pengeluaranPerKategoriRaw->map(function ($item) {
+            return [
+                'kategori' => $item->category ? $item->category->name : 'Uncategorized',
+                'total' => (float) $item->total,
+                'warna' => $item->category ? $item->category->color : '#64748b'
+            ];
+        });
+
+        // 5. Tren 6 Bulan
+        $tren6Bulan = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $monthDate = Carbon::now()->subMonths($i);
+            
+            // Format indonesia singkat: "Jan 2026"
+            $bulanStr = $monthDate->translatedFormat('M Y');
+
+            $in = Transaction::where('user_id', $userId)
+                ->where('type', 'pemasukan')
+                ->whereMonth('transaction_date', $monthDate->month)
+                ->whereYear('transaction_date', $monthDate->year)
+                ->sum('amount');
+            
+            $out = Transaction::where('user_id', $userId)
+                ->where('type', 'pengeluaran')
+                ->whereMonth('transaction_date', $monthDate->month)
+                ->whereYear('transaction_date', $monthDate->year)
+                ->sum('amount');
+
+            $tren6Bulan[] = [
+                'bulan' => $bulanStr,
+                'pemasukan' => (float) $in,
+                'pengeluaran' => (float) $out
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'saldo_total' => $saldoTotal,
+                'pemasukan_bulan_ini' => (float)$pemasukanBulanIni,
+                'pengeluaran_bulan_ini' => (float)$pengeluaranBulanIni,
+                'transaksi_terbaru' => $transaksiTerbaru,
+                'pengeluaran_per_kategori' => $pengeluaranPerKategori,
+                'tren_6_bulan' => $tren6Bulan,
+            ]
         ]);
     }
 }

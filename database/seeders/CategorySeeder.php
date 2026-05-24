@@ -13,12 +13,16 @@ class CategorySeeder extends Seeder
         $user = User::first(); // Ambil user pertama yang dibuat nanti
 
         $categories = [
-            ['name' => 'Gaji', 'type' => 'income', 'color' => '#10b981'],
-            ['name' => 'Bonus', 'type' => 'income', 'color' => '#3b82f6'],
-            ['name' => 'Makanan', 'type' => 'expense', 'color' => '#ef4444'],
-            ['name' => 'Transportasi', 'type' => 'expense', 'color' => '#f59e0b'],
-            ['name' => 'Hiburan', 'type' => 'expense', 'color' => '#8b5cf6'],
-            ['name' => 'Belanja', 'type' => 'expense', 'color' => '#ec4899'],
+            ['name' => 'Gaji', 'type' => 'pemasukan', 'color' => '#10b981'],
+            ['name' => 'Bonus', 'type' => 'pemasukan', 'color' => '#3b82f6'],
+            ['name' => 'Investasi', 'type' => 'pemasukan', 'color' => '#06b6d4'],
+            ['name' => 'Makanan', 'type' => 'pengeluaran', 'color' => '#ef4444'],
+            ['name' => 'Transportasi', 'type' => 'pengeluaran', 'color' => '#f59e0b'],
+            ['name' => 'Hiburan', 'type' => 'pengeluaran', 'color' => '#8b5cf6'],
+            ['name' => 'Belanja', 'type' => 'pengeluaran', 'color' => '#ec4899'],
+            ['name' => 'Kesehatan', 'type' => 'pengeluaran', 'color' => '#f97316'],
+            ['name' => 'Pendidikan', 'type' => 'pengeluaran', 'color' => '#6366f1'],
+            ['name' => 'Tagihan', 'type' => 'pengeluaran', 'color' => '#64748b'],
         ];
 
         foreach ($categories as $category) {

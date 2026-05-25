@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePage, Link } from "@inertiajs/react";
 import AppLayout from "@/Layouts/AppLayout";
-import Toast from '../Components/Toast';
-import { formatRupiah, getGreeting } from '@/utils/format';
-import { apiFetch } from '@/utils/api';
+import Toast from "../Components/Toast";
+import { formatRupiah, getGreeting } from "@/utils/format";
+import { apiFetch } from "@/utils/api";
 // --- KONFIGURASI WARNA PREMIUM ---
 const colors = {
     primary: "#2563eb",
@@ -33,8 +33,13 @@ export default function DashboardPremium() {
 
     const [showModal, setShowModal] = useState(false);
 
-    const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
-    const showToast = (message, type = 'info') => setToast({ show: true, message, type });
+    const [toast, setToast] = useState({
+        show: false,
+        message: "",
+        type: "info",
+    });
+    const showToast = (message, type = "info") =>
+        setToast({ show: true, message, type });
 
     // Data dari backend
     const [loading, setLoading] = useState(true);
@@ -74,7 +79,8 @@ export default function DashboardPremium() {
                 setSaldoError(null);
 
                 const json = await apiFetch("/api/summary/saldo");
-                if (!json || !json.success) throw new Error("Gagal mengambil saldo");
+                if (!json || !json.success)
+                    throw new Error("Gagal mengambil saldo");
                 setSaldo(json.data || null);
             } catch (e) {
                 setSaldoError(e.message || "Terjadi kesalahan");
@@ -142,13 +148,17 @@ export default function DashboardPremium() {
 
     const recentTransactions = useMemo(() => {
         let allTxs = Object.values(transactionsByDate).flat();
-        allTxs.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
-        
+        allTxs.sort(
+            (a, b) =>
+                new Date(b.transaction_date) - new Date(a.transaction_date),
+        );
+
         const q = search.trim().toLowerCase();
         if (q) {
-            allTxs = allTxs.filter((tx) =>
-                (tx.description || "").toLowerCase().includes(q) ||
-                (tx.category || "").toLowerCase().includes(q)
+            allTxs = allTxs.filter(
+                (tx) =>
+                    (tx.description || "").toLowerCase().includes(q) ||
+                    (tx.category || "").toLowerCase().includes(q),
             );
         }
         return allTxs.slice(0, 5);
@@ -161,7 +171,7 @@ export default function DashboardPremium() {
             !form.amount ||
             !form.description
         ) {
-            showToast('Mohon isi semua field yang wajib', 'warning');
+            showToast("Mohon isi semua field yang wajib", "warning");
             return;
         }
 
@@ -215,9 +225,9 @@ export default function DashboardPremium() {
                 saving_id: null,
             });
 
-            showToast('Transaksi berhasil disimpan!', 'success');
+            showToast("Transaksi berhasil disimpan!", "success");
         } catch (e) {
-            showToast(e.message || 'Terjadi kesalahan', 'error');
+            showToast(e.message || "Terjadi kesalahan", "error");
         } finally {
             setSaving(false);
         }
@@ -293,46 +303,6 @@ export default function DashboardPremium() {
                             gap: "24px",
                         }}
                     >
-                        <div style={{ position: "relative" }}>
-                            <input
-                                type="text"
-                                placeholder="Cari apapun..."
-                                style={{
-                                    padding: "12px 16px 12px 45px",
-                                    borderRadius: "14px",
-                                    border: "1px solid #e2e8f0",
-                                    background: "#fff",
-                                    width: "260px",
-                                    fontSize: "14px",
-                                }}
-                            />
-                            <span
-                                style={{
-                                    position: "absolute",
-                                    left: "16px",
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                }}
-                            >
-                                🔍
-                            </span>
-                        </div>
-                        <div
-                            style={{
-                                width: "45px",
-                                height: "45px",
-                                borderRadius: "14px",
-                                background: "#fff",
-                                border: "1px solid #e2e8f0",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                                fontSize: "20px",
-                            }}
-                        >
-                            🔔
-                        </div>
                         <div
                             style={{
                                 display: "flex",
@@ -919,49 +889,6 @@ export default function DashboardPremium() {
                                     Tambah Tabungan
                                 </button>
                             </div>
-
-                            <div
-                                style={{
-                                    background:
-                                        "linear-gradient(135deg, #4338ca 0%, #312e81 100%)",
-                                    padding: "32px",
-                                    borderRadius: "32px",
-                                    color: "#fff",
-                                }}
-                            >
-                                <h3
-                                    style={{
-                                        fontSize: "16px",
-                                        fontWeight: 700,
-                                        marginBottom: "12px",
-                                    }}
-                                >
-                                    Butuh Bantuan?
-                                </h3>
-                                <p
-                                    style={{
-                                        fontSize: "13px",
-                                        opacity: 0.8,
-                                        marginBottom: "20px",
-                                    }}
-                                >
-                                    Hubungi tim support kami jika Anda menemukan
-                                    kendala.
-                                </p>
-                                <button
-                                    style={{
-                                        padding: "10px 20px",
-                                        borderRadius: "10px",
-                                        border: "none",
-                                        background: "#fff",
-                                        color: "#312e81",
-                                        fontWeight: 800,
-                                        fontSize: "13px",
-                                    }}
-                                >
-                                    Buka Tiket
-                                </button>
-                            </div>
                         </aside>
                     </div>
                 </div>
@@ -1348,4 +1275,3 @@ export default function DashboardPremium() {
         </AppLayout>
     );
 }
-

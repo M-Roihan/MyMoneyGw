@@ -32,10 +32,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Otomatis login setelah daftar
-        Auth::login($user);
-
         // Redirect ke Dashboard (Modul 1.3.3)
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route('login', absolute: false));
     }
 }

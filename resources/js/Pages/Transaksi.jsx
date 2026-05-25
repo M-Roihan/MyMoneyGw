@@ -156,281 +156,423 @@ export default function Transaksi() {
 
     return (
         <AppLayout title="Transaksi">
+            {/*ubah font disini bro*/}
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+                * { transition: all 0.2s ease-in-out; }
+                .action-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+                .btn-primary:hover { background: #1d4ed8 !important; transform: scale(1.02); }
+                input:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+            `}</style>
+
             <div className="p-6 lg:p-10">
-            {toast.show && (
-                <Toast 
-                    message={toast.message} 
-                    type={toast.type} 
-                    onClose={() => setToast({ ...toast, show: false })} 
+                {toast.show && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast({ ...toast, show: false })}
+                    />
+                )}
+
+                <ConfirmDialog
+                    isOpen={showConfirm}
+                    title="Hapus Transaksi"
+                    message="Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan."
+                    danger={true}
+                    confirmLabel="Hapus"
+                    onCancel={() => setShowConfirm(false)}
+                    onConfirm={handleConfirmDelete}
                 />
-            )}
 
-            <ConfirmDialog 
-                isOpen={showConfirm}
-                title="Hapus Transaksi"
-                message="Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan."
-                danger={true}
-                confirmLabel="Hapus"
-                onCancel={() => setShowConfirm(false)}
-                onConfirm={handleConfirmDelete}
-            />
+                <div className="max-w-7xl mx-auto">
+                    <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900">
+                                Transaksi
+                            </h1>
+                            <p className="text-slate-500 text-sm mt-1">
+                                Kelola semua pemasukan dan pengeluaran Anda.
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleOpenAdd}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors flex items-center gap-2 text-sm"
+                        >
+                            <span>+</span> Tambah Transaksi
+                        </button>
+                    </header>
 
-            <div className="max-w-7xl mx-auto">
-                <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Transaksi</h1>
-                        <p className="text-slate-500 text-sm mt-1">Kelola semua pemasukan dan pengeluaran Anda.</p>
-                    </div>
-                    <button 
-                        onClick={handleOpenAdd}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors flex items-center gap-2 text-sm"
-                    >
-                        <span>+</span> Tambah Transaksi
-                    </button>
-                </header>
-
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                    
-                    {/* Filters */}
-                    <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row gap-4 bg-slate-50/50">
-                        <div className="flex-1">
-                            <div className="relative">
-                                <input 
-                                    type="text" 
-                                    placeholder="Cari deskripsi..." 
-                                    value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-sm"
-                                />
-                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                        {/* Filters */}
+                        <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row gap-4 bg-slate-50/50">
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Cari deskripsi..."
+                                        value={searchInput}
+                                        onChange={(e) =>
+                                            setSearchInput(e.target.value)
+                                        }
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-sm"
+                                    />
+                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                        🔍
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <select
+                                    value={filterType}
+                                    onChange={(e) =>
+                                        setFilterType(e.target.value)
+                                    }
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 text-sm font-medium text-slate-700"
+                                >
+                                    <option value="Semua">Semua Tipe</option>
+                                    <option value="pemasukan">Pemasukan</option>
+                                    <option value="pengeluaran">
+                                        Pengeluaran
+                                    </option>
+                                </select>
+                                <select
+                                    value={filterCategory}
+                                    onChange={(e) =>
+                                        setFilterCategory(e.target.value)
+                                    }
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 text-sm font-medium text-slate-700"
+                                >
+                                    <option value="Semua">
+                                        Semua Kategori
+                                    </option>
+                                    {categories.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
-                        <div className="flex gap-4">
-                            <select 
-                                value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 text-sm font-medium text-slate-700"
-                            >
-                                <option value="Semua">Semua Tipe</option>
-                                <option value="pemasukan">Pemasukan</option>
-                                <option value="pengeluaran">Pengeluaran</option>
-                            </select>
-                            <select 
-                                value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
-                                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 text-sm font-medium text-slate-700"
-                            >
-                                <option value="Semua">Semua Kategori</option>
-                                {categories.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
-                                    <th className="px-6 py-4 whitespace-nowrap">Tanggal</th>
-                                    <th className="px-6 py-4 whitespace-nowrap">Kategori</th>
-                                    <th className="px-6 py-4 whitespace-nowrap">Akun</th>
-                                    <th className="px-6 py-4 w-full">Deskripsi</th>
-                                    <th className="px-6 py-4 whitespace-nowrap text-right">Jumlah</th>
-                                    <th className="px-6 py-4 whitespace-nowrap text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan="6" className="px-6 py-8 text-center text-slate-500 text-sm">
-                                            <div className="animate-pulse flex flex-col items-center gap-2">
-                                                <div className="h-4 w-24 bg-slate-200 rounded"></div>
-                                                <span className="text-slate-400">Memuat data...</span>
-                                            </div>
-                                        </td>
+                        {/* Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
+                                        <th className="px-6 py-4 whitespace-nowrap">
+                                            Tanggal
+                                        </th>
+                                        <th className="px-6 py-4 whitespace-nowrap">
+                                            Kategori
+                                        </th>
+                                        <th className="px-6 py-4 whitespace-nowrap">
+                                            Akun
+                                        </th>
+                                        <th className="px-6 py-4 w-full">
+                                            Deskripsi
+                                        </th>
+                                        <th className="px-6 py-4 whitespace-nowrap text-right">
+                                            Jumlah
+                                        </th>
+                                        <th className="px-6 py-4 whitespace-nowrap text-center">
+                                            Aksi
+                                        </th>
                                     </tr>
-                                ) : filteredTransactions.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" className="px-6 py-12 text-center text-slate-500 text-sm">
-                                            <div className="text-4xl mb-3">📄</div>
-                                            <p className="font-semibold text-slate-700">Tidak ada transaksi ditemukan</p>
-                                            <p className="text-slate-400 mt-1">Coba sesuaikan filter atau tambah transaksi baru.</p>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredTransactions.map(tx => {
-                                        const isIncome = tx.type === 'pemasukan';
-                                        return (
-                                            <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors group">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
-                                                    {formatDate(tx.transaction_date)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
-                                                        isIncome ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
-                                                    }`}>
-                                                        {tx.category?.name || 'Uncategorized'}
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {loading ? (
+                                        <tr>
+                                            <td
+                                                colSpan="6"
+                                                className="px-6 py-8 text-center text-slate-500 text-sm"
+                                            >
+                                                <div className="animate-pulse flex flex-col items-center gap-2">
+                                                    <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                                                    <span className="text-slate-400">
+                                                        Memuat data...
                                                     </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                                    {tx.account?.name || '-'}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-slate-800">
-                                                    {tx.description}
-                                                </td>
-                                                <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${
-                                                    isIncome ? 'text-emerald-600' : 'text-rose-600'
-                                                }`}>
-                                                    {isIncome ? '+' : '-'}{formatRupiah(tx.amount)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                    <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button 
-                                                            onClick={() => handleOpenEdit(tx)}
-                                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                            title="Edit"
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : filteredTransactions.length === 0 ? (
+                                        <tr>
+                                            <td
+                                                colSpan="6"
+                                                className="px-6 py-12 text-center text-slate-500 text-sm"
+                                            >
+                                                <div className="text-4xl mb-3">
+                                                    📄
+                                                </div>
+                                                <p className="font-semibold text-slate-700">
+                                                    Tidak ada transaksi
+                                                    ditemukan
+                                                </p>
+                                                <p className="text-slate-400 mt-1">
+                                                    Coba sesuaikan filter atau
+                                                    tambah transaksi baru.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        filteredTransactions.map((tx) => {
+                                            const isIncome =
+                                                tx.type === "pemasukan";
+                                            return (
+                                                <tr
+                                                    key={tx.id}
+                                                    className="hover:bg-slate-50/80 transition-colors group"
+                                                >
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                                                        {formatDate(
+                                                            tx.transaction_date,
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span
+                                                            className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
+                                                                isIncome
+                                                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                                                    : "bg-rose-50 text-rose-700 border border-rose-200"
+                                                            }`}
                                                         >
-                                                            ✏️
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleDeleteClick(tx.id)}
-                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                            title="Hapus"
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {/* Modal Form */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white w-full max-w-lg rounded-3xl p-6 md:p-8 m-4 shadow-2xl overflow-y-auto max-h-[90vh]">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-slate-900">
-                                {isEditing ? 'Edit Transaksi' : 'Tambah Transaksi'}
-                            </h2>
-                            <button 
-                                onClick={() => setShowModal(false)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
-                            >
-                                ✕
-                            </button>
+                                                            {tx.category
+                                                                ?.name ||
+                                                                "Uncategorized"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                                        {tx.account?.name ||
+                                                            "-"}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-slate-800">
+                                                        {tx.description}
+                                                    </td>
+                                                    <td
+                                                        className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${
+                                                            isIncome
+                                                                ? "text-emerald-600"
+                                                                : "text-rose-600"
+                                                        }`}
+                                                    >
+                                                        {isIncome ? "+" : "-"}
+                                                        {formatRupiah(
+                                                            tx.amount,
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                        <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleOpenEdit(
+                                                                        tx,
+                                                                    )
+                                                                }
+                                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                title="Edit"
+                                                            >
+                                                                ✏️
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDeleteClick(
+                                                                        tx.id,
+                                                                    )
+                                                                }
+                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Hapus"
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Tipe</label>
-                                    <select 
-                                        required
-                                        value={form.type}
-                                        onChange={e => setForm({...form, type: e.target.value})}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
-                                    >
-                                        <option value="pemasukan">Pemasukan</option>
-                                        <option value="pengeluaran">Pengeluaran</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Kategori</label>
-                                    <select 
-                                        required
-                                        value={form.category_id}
-                                        onChange={e => setForm({...form, category_id: e.target.value})}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
-                                    >
-                                        <option value="">-- Pilih --</option>
-                                        {categories.map(c => (
-                                            <option key={c.id} value={c.id}>{c.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Akun</label>
-                                    <select 
-                                        required
-                                        value={form.account_id}
-                                        onChange={e => setForm({...form, account_id: e.target.value})}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
-                                    >
-                                        <option value="">-- Pilih --</option>
-                                        {accounts.map(a => (
-                                            <option key={a.id} value={a.id}>{a.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Tanggal</label>
-                                    <input 
-                                        type="date" 
-                                        required
-                                        value={form.transaction_date}
-                                        onChange={e => setForm({...form, transaction_date: e.target.value})}
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Jumlah (Rp)</label>
-                                    <input 
-                                        type="number" 
-                                        min="0"
-                                        required
-                                        value={form.amount}
-                                        onChange={e => setForm({...form, amount: e.target.value})}
-                                        placeholder="0"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
-                                    />
-                                </div>
-
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Deskripsi</label>
-                                    <input 
-                                        type="text" 
-                                        required
-                                        value={form.description}
-                                        onChange={e => setForm({...form, description: e.target.value})}
-                                        placeholder="Keterangan transaksi..."
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
-                                <button 
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors"
-                                >
-                                    Batal
-                                </button>
-                                <button 
-                                    type="submit"
-                                    disabled={saving}
-                                    className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors disabled:opacity-50"
-                                >
-                                    {saving ? 'Menyimpan...' : 'Simpan'}
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-            )}
+
+                {/* Modal Form */}
+                {showModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white w-full max-w-lg rounded-3xl p-6 md:p-8 m-4 shadow-2xl overflow-y-auto max-h-[90vh]">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-slate-900">
+                                    {isEditing
+                                        ? "Edit Transaksi"
+                                        : "Tambah Transaksi"}
+                                </h2>
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form
+                                onSubmit={handleSubmit}
+                                className="flex flex-col gap-5"
+                            >
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                                            Tipe
+                                        </label>
+                                        <select
+                                            required
+                                            value={form.type}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    type: e.target.value,
+                                                })
+                                            }
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
+                                        >
+                                            <option value="pemasukan">
+                                                Pemasukan
+                                            </option>
+                                            <option value="pengeluaran">
+                                                Pengeluaran
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                                            Kategori
+                                        </label>
+                                        <select
+                                            required
+                                            value={form.category_id}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    category_id: e.target.value,
+                                                })
+                                            }
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
+                                        >
+                                            <option value="">
+                                                -- Pilih --
+                                            </option>
+                                            {categories.map((c) => (
+                                                <option key={c.id} value={c.id}>
+                                                    {c.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                                            Akun
+                                        </label>
+                                        <select
+                                            required
+                                            value={form.account_id}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    account_id: e.target.value,
+                                                })
+                                            }
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
+                                        >
+                                            <option value="">
+                                                -- Pilih --
+                                            </option>
+                                            {accounts.map((a) => (
+                                                <option key={a.id} value={a.id}>
+                                                    {a.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                                            Tanggal
+                                        </label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={form.transaction_date}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    transaction_date:
+                                                        e.target.value,
+                                                })
+                                            }
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                                            Jumlah (Rp)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            required
+                                            value={form.amount}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    amount: e.target.value,
+                                                })
+                                            }
+                                            placeholder="0"
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
+                                        />
+                                    </div>
+
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                                            Deskripsi
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={form.description}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    description: e.target.value,
+                                                })
+                                            }
+                                            placeholder="Keterangan transaksi..."
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors disabled:opacity-50"
+                                    >
+                                        {saving ? "Menyimpan..." : "Simpan"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

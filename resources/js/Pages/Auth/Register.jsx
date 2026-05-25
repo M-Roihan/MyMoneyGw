@@ -17,7 +17,7 @@ export default function Register() {
     return (
         <div 
             className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat p-4 md:p-10"
-            style={{ backgroundImage: "url('/images/bg-finance.jpg')" }}
+            style={{ backgroundImage: "url('/images/bg-hutao.jpg')" }}
         >
             <Head title="Daftar FinanceKu" />
 

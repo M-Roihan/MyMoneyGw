@@ -893,60 +893,6 @@ export default function DashboardPremium() {
                     </div>
                 </div>
 
-                {/* --- FOOTER --- */}
-                <footer
-                    style={{
-                        marginTop: "auto",
-                        padding: "40px",
-                        borderTop: "1px solid #e2e8f0",
-                        background: "#fff",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                    }}
-                >
-                    <div>
-                        <p
-                            style={{
-                                fontSize: "14px",
-                                fontWeight: 700,
-                                color: colors.textMain,
-                            }}
-                        >
-                            FinanceKu v2.4.0
-                        </p>
-                        <p
-                            style={{
-                                fontSize: "12px",
-                                color: colors.textMuted,
-                            }}
-                        >
-                            © 2026 PT. Keuangan Digital Indonesia. Seluruh hak
-                            cipta dilindungi.
-                        </p>
-                    </div>
-                    <div style={{ display: "flex", gap: "32px" }}>
-                        {[
-                            "Kebijakan Privasi",
-                            "Syarat & Ketentuan",
-                            "Bantuan",
-                        ].map((link) => (
-                            <a
-                                key={link}
-                                href="#"
-                                style={{
-                                    fontSize: "13px",
-                                    fontWeight: 600,
-                                    color: colors.textMuted,
-                                    textDecoration: "none",
-                                }}
-                            >
-                                {link}
-                            </a>
-                        ))}
-                    </div>
-                </footer>
-
                 {/* --- MODAL TAMBAH TRANSAKSI --- */}
                 {showModal && (
                     <div

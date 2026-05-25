@@ -18,7 +18,7 @@ class TransactionController extends Controller
     {
         $userId = Auth::id();
 
-
+        // 1. Ambil Total Pemasukan & Pengeluaran dari Transaksi
         $pemasukan = Transaction::where('user_id', $userId)
             ->where('type', 'pemasukan')
             ->sum('amount');
@@ -27,7 +27,8 @@ class TransactionController extends Controller
             ->where('type', 'pengeluaran')
             ->sum('amount');
 
-        $totalSaldo = (float) $pemasukan - (float) $pengeluaran;
+        // 2. Ambil Total Saldo asli dari akumulasi seluruh akun di DompetKu
+        $totalSaldo = Account::where('user_id', $userId)->sum('balance');
 
         return response()->json([
             'success' => true,
@@ -197,10 +198,12 @@ class TransactionController extends Controller
             $endDate = $now->copy()->endOfMonth();
         }
 
-        // 1. Saldo Total
+        // 1. Pemasukan & Pengeluaran (Keseluruhan dari transaksi)
         $totalPemasukan = Transaction::where('user_id', $userId)->where('type', 'pemasukan')->sum('amount');
         $totalPengeluaran = Transaction::where('user_id', $userId)->where('type', 'pengeluaran')->sum('amount');
-        $saldoTotal = (float)$totalPemasukan - (float)$totalPengeluaran;
+        
+        // Saldo Total: Gabungan saldo real dari semua Akun
+        $saldoTotal = Account::where('user_id', $userId)->sum('balance');
 
         // 2. Bulan Ini / Sesuai Filter
         $pemasukanBulanIni = Transaction::where('user_id', $userId)

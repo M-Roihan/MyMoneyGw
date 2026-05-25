@@ -8,19 +8,8 @@ use App\Http\Controllers\SavingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 Route::redirect('/', '/login');
-
-// Rute Guest (Hanya untuk yang belum login)
-Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
-
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
-});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
@@ -43,10 +32,10 @@ Route::middleware('auth')->group(function () {
     // Transaction Routes
     Route::get('/api/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::post('/api/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::get('/api/transactions/by-date-range', [TransactionController::class, 'byDateRange'])->name('transactions.byDateRange');
     Route::get('/api/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
     Route::put('/api/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/api/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
-    Route::get('/api/transactions/by-date-range', [TransactionController::class, 'byDateRange'])->name('transactions.byDateRange');
 
     // Category Routes
     Route::get('/api/categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -76,8 +65,5 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/accounts/{account}', [AccountController::class, 'update']);
     Route::delete('/api/accounts/{account}', [AccountController::class, 'destroy']);
 });
-
-// Rute Logout
-Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 require __DIR__ . '/auth.php';

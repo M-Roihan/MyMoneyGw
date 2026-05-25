@@ -2,9 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import Toast from '../Components/Toast';
 import ConfirmDialog from '../Components/ConfirmDialog';
-
-const formatRupiah = (v) => `Rp ${Math.round(v).toLocaleString('id-ID')}`;
-const formatDate = (d) => new Date(d).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'});
+import { formatRupiah, formatDate } from '@/utils/format';
+import { apiFetch } from '@/utils/api';
 
 export default function Transaksi() {
     const [transactions, setTransactions] = useState([]);
@@ -47,24 +46,15 @@ export default function Transaksi() {
     const fetchAll = async () => {
         setLoading(true);
         try {
-            const [txRes, catRes, accRes] = await Promise.all([
-                fetch('/api/transactions'),
-                fetch('/api/categories'),
-                fetch('/api/accounts')
+            const [txJson, catJson, accJson] = await Promise.all([
+                apiFetch('/api/transactions'),
+                apiFetch('/api/categories'),
+                apiFetch('/api/accounts')
             ]);
             
-            if (txRes.ok) {
-                const txJson = await txRes.json();
-                setTransactions(txJson.data || []);
-            }
-            if (catRes.ok) {
-                const catJson = await catRes.json();
-                setCategories(catJson.data || []);
-            }
-            if (accRes.ok) {
-                const accJson = await accRes.json();
-                setAccounts(accJson.data || []);
-            }
+            if (txJson) setTransactions(txJson.data || []);
+            if (catJson) setCategories(catJson.data || []);
+            if (accJson) setAccounts(accJson.data || []);
         } catch (error) {
             console.error(error);
             showToast('Gagal memuat data', 'error');
@@ -128,14 +118,9 @@ export default function Transaksi() {
 
     const handleConfirmDelete = async () => {
         try {
-            const res = await fetch(`/api/transactions/${confirmId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                    'Accept': 'application/json'
-                }
+            await apiFetch(`/api/transactions/${confirmId}`, {
+                method: 'DELETE'
             });
-            if (!res.ok) throw new Error('Gagal menghapus');
             showToast('Transaksi berhasil dihapus', 'success');
             fetchAll();
         } catch (e) {
@@ -154,18 +139,10 @@ export default function Transaksi() {
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
-            const res = await fetch(url, {
+            await apiFetch(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                },
                 body: JSON.stringify(form)
             });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Gagal menyimpan transaksi');
 
             showToast(isEditing ? 'Transaksi berhasil diupdate' : 'Transaksi berhasil ditambahkan', 'success');
             setShowModal(false);

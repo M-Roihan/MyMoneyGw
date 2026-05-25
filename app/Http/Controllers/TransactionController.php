@@ -179,27 +179,38 @@ class TransactionController extends Controller
     /**
      * Data Summary untuk Dashboard
      */
-    public function dashboardSummary()
+    public function dashboardSummary(Request $request)
     {
         $userId = Auth::id();
+        $filter = $request->query('filter', 'Bulan Ini');
         $now = Carbon::now();
+
+        // Tentukan rentang tanggal berdasarkan filter
+        if ($filter === 'Bulan Lalu') {
+            $startDate = $now->copy()->subMonth()->startOfMonth();
+            $endDate = $now->copy()->subMonth()->endOfMonth();
+        } elseif ($filter === 'Tahun Ini') {
+            $startDate = $now->copy()->startOfYear();
+            $endDate = $now->copy()->endOfMonth();
+        } else { // 'Bulan Ini' (default)
+            $startDate = $now->copy()->startOfMonth();
+            $endDate = $now->copy()->endOfMonth();
+        }
 
         // 1. Saldo Total
         $totalPemasukan = Transaction::where('user_id', $userId)->where('type', 'pemasukan')->sum('amount');
         $totalPengeluaran = Transaction::where('user_id', $userId)->where('type', 'pengeluaran')->sum('amount');
         $saldoTotal = (float)$totalPemasukan - (float)$totalPengeluaran;
 
-        // 2. Bulan Ini
+        // 2. Bulan Ini / Sesuai Filter
         $pemasukanBulanIni = Transaction::where('user_id', $userId)
             ->where('type', 'pemasukan')
-            ->whereMonth('transaction_date', $now->month)
-            ->whereYear('transaction_date', $now->year)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
             ->sum('amount');
 
         $pengeluaranBulanIni = Transaction::where('user_id', $userId)
             ->where('type', 'pengeluaran')
-            ->whereMonth('transaction_date', $now->month)
-            ->whereYear('transaction_date', $now->year)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
             ->sum('amount');
 
         // 3. Transaksi Terbaru
@@ -210,11 +221,10 @@ class TransactionController extends Controller
             ->take(5)
             ->get();
 
-        // 4. Pengeluaran per Kategori (Bulan Ini)
+        // 4. Pengeluaran per Kategori (Sesuai Filter)
         $pengeluaranPerKategoriRaw = Transaction::where('user_id', $userId)
             ->where('type', 'pengeluaran')
-            ->whereMonth('transaction_date', $now->month)
-            ->whereYear('transaction_date', $now->year)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
             ->selectRaw('category_id, sum(amount) as total')
             ->groupBy('category_id')
             ->with('category')

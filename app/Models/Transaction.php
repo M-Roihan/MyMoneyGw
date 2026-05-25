@@ -22,6 +22,11 @@ class Transaction extends Model
         'transaction_date'
     ];
 
+    protected $casts = [
+        'transaction_date' => 'date',
+        'amount' => 'decimal:2',
+    ];
+
     // Transaksi ini dibuat oleh satu User
     public function user(): BelongsTo
     {

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import Toast from '../Components/Toast';
 import ConfirmDialog from '../Components/ConfirmDialog';
-
-const formatRupiah = (v) => `Rp ${Math.round(v).toLocaleString('id-ID')}`;
+import { formatRupiah } from '@/utils/format';
+import { apiFetch } from '@/utils/api';
 
 export default function DompetKu() {
     const [accounts, setAccounts] = useState([]);
@@ -35,9 +35,8 @@ export default function DompetKu() {
     const fetchAccounts = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/accounts');
-            if (res.ok) {
-                const json = await res.json();
+            const json = await apiFetch('/api/accounts');
+            if (json) {
                 setAccounts(json.data || []);
             }
         } catch (error) {
@@ -81,14 +80,9 @@ export default function DompetKu() {
 
     const handleConfirmDelete = async () => {
         try {
-            const res = await fetch(`/api/accounts/${confirmId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                    'Accept': 'application/json'
-                }
+            await apiFetch(`/api/accounts/${confirmId}`, {
+                method: 'DELETE'
             });
-            if (!res.ok) throw new Error('Gagal menghapus akun');
             showToast('Akun berhasil dihapus', 'success');
             fetchAccounts();
         } catch (e) {
@@ -107,18 +101,10 @@ export default function DompetKu() {
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
-            const res = await fetch(url, {
+            await apiFetch(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                },
                 body: JSON.stringify(form)
             });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Gagal menyimpan akun');
 
             showToast(isEditing ? 'Akun berhasil diupdate' : 'Akun berhasil ditambahkan', 'success');
             setShowModal(false);

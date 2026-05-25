@@ -68,6 +68,7 @@ class User extends Authenticatable
 
     /**
      * Relasi ke data Transaksi (Pemasukan/Pengeluaran)
+     */
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);

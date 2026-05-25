@@ -2,12 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import Toast from '../Components/Toast';
 import ConfirmDialog from '../Components/ConfirmDialog';
-
-const formatRupiah = (v) => `Rp ${Math.round(v).toLocaleString('id-ID')}`;
-const formatDate = (d) => {
-    if (!d) return 'Tidak ada deadline';
-    return new Date(d).toLocaleDateString('id-ID', {day: '2-digit', month: 'long', year: 'numeric'});
-};
+import { formatRupiah, formatDate } from '@/utils/format';
+import { apiFetch } from '@/utils/api';
 
 export default function Tabungan() {
     const [savings, setSavings] = useState([]);
@@ -44,9 +40,8 @@ export default function Tabungan() {
     const fetchSavings = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/savings');
-            if (res.ok) {
-                const json = await res.json();
+            const json = await apiFetch('/api/savings');
+            if (json) {
                 setSavings(json.data || []);
             }
         } catch (error) {
@@ -94,14 +89,9 @@ export default function Tabungan() {
 
     const handleConfirmDelete = async () => {
         try {
-            const res = await fetch(`/api/savings/${confirmId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                    'Accept': 'application/json'
-                }
+            await apiFetch(`/api/savings/${confirmId}`, {
+                method: 'DELETE'
             });
-            if (!res.ok) throw new Error('Gagal menghapus tabungan');
             showToast('Tabungan berhasil dihapus', 'success');
             fetchSavings();
         } catch (e) {
@@ -120,18 +110,10 @@ export default function Tabungan() {
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
-            const res = await fetch(url, {
+            await apiFetch(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                },
                 body: JSON.stringify(form)
             });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Gagal menyimpan tabungan');
 
             showToast(isEditing ? 'Tabungan berhasil diupdate' : 'Tabungan berhasil dibuat', 'success');
             setShowFormModal(false);
@@ -148,18 +130,10 @@ export default function Tabungan() {
         setSaving(true);
 
         try {
-            const res = await fetch(`/api/savings/${depositId}/deposit`, {
+            await apiFetch(`/api/savings/${depositId}/deposit`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                },
                 body: JSON.stringify({ amount: depositAmount })
             });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Gagal melakukan setoran');
 
             showToast('Setoran berhasil ditambahkan', 'success');
             setShowDepositModal(false);

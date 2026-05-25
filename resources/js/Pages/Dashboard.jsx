@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { usePage } from "@inertiajs/react";
+import { usePage, Link } from "@inertiajs/react";
 import AppLayout from "@/Layouts/AppLayout";
+import Toast from '../Components/Toast';
+import { formatRupiah, getGreeting } from '@/utils/format';
+import { apiFetch } from '@/utils/api';
 // --- KONFIGURASI WARNA PREMIUM ---
 const colors = {
     primary: "#2563eb",
@@ -26,15 +29,12 @@ export default function DashboardPremium() {
     const [currentMonth] = useState(now.getMonth());
     const [currentYear] = useState(now.getFullYear());
 
-    const greeting = useMemo(() => {
-        const hour = now.getHours();
-        if (hour >= 5 && hour < 11) return "Selamat Pagi";
-        if (hour >= 11 && hour < 15) return "Selamat Siang";
-        if (hour >= 15 && hour < 18) return "Selamat Sore";
-        return "Selamat Malam";
-    }, [now]);
+    const greeting = useMemo(() => getGreeting(), []);
 
     const [showModal, setShowModal] = useState(false);
+
+    const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+    const showToast = (message, type = 'info') => setToast({ show: true, message, type });
 
     // Data dari backend
     const [loading, setLoading] = useState(true);
@@ -51,12 +51,6 @@ export default function DashboardPremium() {
     const [saldo, setSaldo] = useState(null);
     const [saldoError, setSaldoError] = useState(null);
     const [saldoLoading, setSaldoLoading] = useState(true);
-
-    const formatRupiah = (value) => {
-        const v = Number(value || 0);
-        return `Rp ${Math.round(v).toLocaleString("id-ID")}`;
-    };
-
 
     // Form tambah transaksi
     const [saving, setSaving] = useState(false);
@@ -79,11 +73,8 @@ export default function DashboardPremium() {
                 setSaldoLoading(true);
                 setSaldoError(null);
 
-                const res = await fetch("/api/summary/saldo");
-                if (!res.ok) throw new Error("Gagal mengambil saldo");
-                const json = await res.json();
-
-                if (!json.success) throw new Error("Gagal mengambil saldo");
+                const json = await apiFetch("/api/summary/saldo");
+                if (!json || !json.success) throw new Error("Gagal mengambil saldo");
                 setSaldo(json.data || null);
             } catch (e) {
                 setSaldoError(e.message || "Terjadi kesalahan");
@@ -97,23 +88,17 @@ export default function DashboardPremium() {
                 setLoading(true);
                 setError(null);
 
-                const [txRes, catRes, accRes, savRes] = await Promise.all([
-                    fetch("/api/transactions"),
-                    fetch("/api/categories"),
-                    fetch("/api/accounts"),
-                    fetch("/api/savings"),
+                const [txJson, catJson, accJson, savJson] = await Promise.all([
+                    apiFetch("/api/transactions"),
+                    apiFetch("/api/categories"),
+                    apiFetch("/api/accounts"),
+                    apiFetch("/api/savings"),
                 ]);
 
-
-                if (!txRes.ok) throw new Error("Gagal mengambil transaksi");
-                if (!catRes.ok) throw new Error("Gagal mengambil kategori");
-                if (!accRes.ok) throw new Error("Gagal mengambil akun");
-                if (!savRes.ok) throw new Error("Gagal mengambil tabungan");
-
-                const txJson = await txRes.json();
-                const catJson = await catRes.json();
-                const accJson = await accRes.json();
-                const savJson = await savRes.json();
+                if (!txJson) throw new Error("Gagal mengambil transaksi");
+                if (!catJson) throw new Error("Gagal mengambil kategori");
+                if (!accJson) throw new Error("Gagal mengambil akun");
+                if (!savJson) throw new Error("Gagal mengambil tabungan");
 
                 setCategories(catJson.data || []);
                 setAccounts(accJson.data || []);
@@ -155,26 +140,19 @@ export default function DashboardPremium() {
         return () => clearInterval(intervalId);
     }, []);
 
-    const filteredDates = useMemo(() => {
-        return Object.keys(transactionsByDate)
-            .filter((d) => {
-                const dt = new Date(d);
-                return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
-            })
-            .sort((a, b) => new Date(b) - new Date(a));
-    }, [transactionsByDate, currentMonth, currentYear]);
-
-    const filteredTxsForDate = (dateStr) => {
-        const list = transactionsByDate[dateStr] || [];
+    const recentTransactions = useMemo(() => {
+        let allTxs = Object.values(transactionsByDate).flat();
+        allTxs.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
+        
         const q = search.trim().toLowerCase();
-        if (!q) return list;
-        return list.filter((tx) => {
-            return (
+        if (q) {
+            allTxs = allTxs.filter((tx) =>
                 (tx.description || "").toLowerCase().includes(q) ||
                 (tx.category || "").toLowerCase().includes(q)
             );
-        });
-    };
+        }
+        return allTxs.slice(0, 5);
+    }, [transactionsByDate, search]);
 
     async function handleAddTransaction() {
         if (
@@ -183,7 +161,7 @@ export default function DashboardPremium() {
             !form.amount ||
             !form.description
         ) {
-            console.error("Mohon isi semua field");
+            showToast('Mohon isi semua field yang wajib', 'warning');
             return;
         }
 
@@ -200,23 +178,11 @@ export default function DashboardPremium() {
                 saving_id: form.saving_id || null,
             };
 
-            const res = await fetch("/api/transactions", {
+            const result = await apiFetch("/api/transactions", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-CSRF-TOKEN":
-                        document.querySelector('meta[name="csrf-token"]')?.content || "",
-                },
                 body: JSON.stringify(payload),
             });
 
-            if (!res.ok) {
-                const errData = await res.json().catch(() => null);
-                throw new Error(errData?.message || "Gagal menyimpan transaksi");
-            }
-
-            const result = await res.json();
             const created = result.data;
 
             const dateKey = created.transaction_date;
@@ -249,9 +215,9 @@ export default function DashboardPremium() {
                 saving_id: null,
             });
 
-            console.error("Transaksi berhasil disimpan!");
+            showToast('Transaksi berhasil disimpan!', 'success');
         } catch (e) {
-            console.error("Error: " + (e.message || e));
+            showToast(e.message || 'Terjadi kesalahan', 'error');
         } finally {
             setSaving(false);
         }
@@ -266,6 +232,8 @@ export default function DashboardPremium() {
                 .btn-primary:hover { background: #1d4ed8 !important; transform: scale(1.02); }
                 input:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
             `}</style>
+            
+            {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({...toast, show: false})} />}
             
             <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", background: colors.background }}>
                 
@@ -348,71 +316,75 @@ export default function DashboardPremium() {
                                         Error: {error}
                                     </div>
                                 )}
-                                {!loading && !error && filteredDates.length === 0 && (
+                                {!loading && !error && recentTransactions.length === 0 && (
                                     <div className="action-card" style={{ padding: "20px 24px", borderRadius: "24px", border: "1px solid #f1f5f9", background: "#fff", color: colors.textMuted }}>
-                                        Tidak ada transaksi di bulan ini.
+                                        Tidak ada transaksi.
                                     </div>
                                 )}
-                                {!loading && !error && filteredDates.map((dateStr) => {
-                                    const txs = filteredTxsForDate(dateStr);
-                                    if (!txs.length) return null;
-                                    return txs.slice(0, 3).map((tx) => {
-                                        const styleKey = tx.category in categoryStyle ? tx.category : "Default";
-                                        const cs = categoryStyle[styleKey];
-                                        const isIncome = tx.type === "pemasukan";
+                                {!loading && !error && recentTransactions.map((tx) => {
+                                    const styleKey = tx.category in categoryStyle ? tx.category : "Default";
+                                    const cs = categoryStyle[styleKey];
+                                    const isIncome = tx.type === "pemasukan";
 
-                                        return (
-                                            <div
-                                                key={tx.id}
-                                                className="action-card"
-                                                style={{
-                                                    background: "#fff",
-                                                    padding: "20px 24px",
-                                                    borderRadius: "24px",
-                                                    border: "1px solid #f1f5f9",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "space-between",
-                                                }}
-                                            >
-                                                <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                                                    <div
-                                                        style={{
-                                                            width: "56px",
-                                                            height: "56px",
-                                                            borderRadius: "18px",
-                                                            background: cs.bg,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            fontSize: "24px",
-                                                        }}
-                                                    >
-                                                        {cs.icon}
-                                                    </div>
-                                                    <div>
-                                                        <p style={{ fontWeight: 800, fontSize: "16px", color: colors.textMain }}>
-                                                            {tx.category}
-                                                        </p>
-                                                        <p style={{ fontSize: "13px", color: colors.textMuted, fontWeight: 500 }}>
-                                                            {new Date(tx.transaction_date).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
-                                                            {tx.account ? ` • ${tx.account}` : ""}
-                                                        </p>
-                                                    </div>
+                                    return (
+                                        <div
+                                            key={tx.id}
+                                            className="action-card"
+                                            style={{
+                                                background: "#fff",
+                                                padding: "20px 24px",
+                                                borderRadius: "24px",
+                                                border: "1px solid #f1f5f9",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                            }}
+                                        >
+                                            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                                                <div
+                                                    style={{
+                                                        width: "56px",
+                                                        height: "56px",
+                                                        borderRadius: "18px",
+                                                        background: cs.bg,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "24px",
+                                                    }}
+                                                >
+                                                    {cs.icon}
                                                 </div>
-                                                <div style={{ textAlign: "right" }}>
-                                                    <p style={{ fontWeight: 800, fontSize: "18px", color: isIncome ? colors.success : colors.danger }}>
-                                                        {isIncome ? "+" : "-"}
-                                                        Rp {Math.round(tx.amount).toLocaleString("id-ID")}
+                                                <div>
+                                                    <p style={{ fontWeight: 800, fontSize: "16px", color: colors.textMain }}>
+                                                        {tx.category}
                                                     </p>
-                                                    <div style={{ fontSize: "11px", color: colors.textMuted, background: "#f1f5f9", padding: "2px 8px", borderRadius: "6px", display: "inline-block", marginTop: "4px" }}>
-                                                        {isIncome ? "Pemasukan" : "Pengeluaran"}
-                                                    </div>
+                                                    <p style={{ fontSize: "13px", color: colors.textMuted, fontWeight: 500 }}>
+                                                        {new Date(tx.transaction_date).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                                                        {tx.account ? ` • ${tx.account}` : ""}
+                                                    </p>
                                                 </div>
                                             </div>
-                                        );
-                                    });
+                                            <div style={{ textAlign: "right" }}>
+                                                <p style={{ fontWeight: 800, fontSize: "18px", color: isIncome ? colors.success : colors.danger }}>
+                                                    {isIncome ? "+" : "-"}
+                                                    Rp {Math.round(tx.amount).toLocaleString("id-ID")}
+                                                </p>
+                                                <div style={{ fontSize: "11px", color: colors.textMuted, background: "#f1f5f9", padding: "2px 8px", borderRadius: "6px", display: "inline-block", marginTop: "4px" }}>
+                                                    {isIncome ? "Pemasukan" : "Pengeluaran"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
                                 })}
+                                
+                                {!loading && !error && recentTransactions.length > 0 && (
+                                    <div style={{ textAlign: "center", marginTop: "8px" }}>
+                                        <Link href="/transaksi" style={{ color: colors.primary, fontWeight: 700, fontSize: "14px", textDecoration: "none" }}>
+                                            Lihat Semua Transaksi →
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         </section>
 

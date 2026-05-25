@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
+import { apiFetch } from '@/utils/api';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -21,11 +22,10 @@ export default function Laporan() {
         const fetchSummary = async () => {
             setLoading(true);
             try {
-                const res = await fetch('/api/dashboard/summary');
-                const json = await res.json();
-                if (json.success) {
-                    setDataSummary(json.data);
-                }
+                // Kirim filter sebagai query param
+                const params = new URLSearchParams({ filter: monthFilter });
+                const json = await apiFetch(`/api/dashboard/summary?${params}`);
+                if (json && json.success) setDataSummary(json.data);
             } catch (err) {
                 console.error(err);
             } finally {

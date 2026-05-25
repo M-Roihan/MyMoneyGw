@@ -4,11 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use App\Observers\TransactionObserver;
 
+#[ObservedBy(TransactionObserver::class)]
 class Transaction extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id', 
@@ -19,6 +23,11 @@ class Transaction extends Model
         'amount', 
         'description', 
         'transaction_date'
+    ];
+
+    protected $casts = [
+        'transaction_date' => 'date',
+        'amount' => 'decimal:2',
     ];
 
     // Transaksi ini dibuat oleh satu User

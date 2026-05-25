@@ -1,286 +1,114 @@
-import { useState, useEffect } from "react";
-
-const categoryColors = {
-    Gaji: "#d1fae5",
-    Bonus: "#dbeafe",
-    Freelance: "#ede9fe",
-    Belanja: "#fef3c7",
-    Transportasi: "#fee2e2",
-    Makan: "#fce7f3",
-    Hiburan: "#e0e7ff",
+import { useEffect, useMemo, useState } from "react";
+import { usePage, Link } from "@inertiajs/react";
+import AppLayout from "@/Layouts/AppLayout";
+import Toast from '../Components/Toast';
+import { formatRupiah, getGreeting } from '@/utils/format';
+import { apiFetch } from '@/utils/api';
+// --- KONFIGURASI WARNA PREMIUM ---
+const colors = {
+    primary: "#2563eb",
+    secondary: "#1e293b",
+    success: "#10b981",
+    danger: "#ef4444",
+    background: "#f8fafc",
+    card: "#ffffff",
+    textMain: "#0f172a",
+    textMuted: "#64748b",
 };
 
-const categoryText = {
-    Gaji: "#065f46",
-    Bonus: "#1e40af",
-    Freelance: "#5b21b6",
-    Belanja: "#92400e",
-    Transportasi: "#991b1b",
-    Makan: "#9d174d",
-    Hiburan: "#3730a3",
+const categoryStyle = {
+    Gaji: { color: "#10b981", bg: "#ecfdf5", icon: "💰" },
+    Belanja: { color: "#f59e0b", bg: "#fffbeb", icon: "🛒" },
+    Makan: { color: "#ec4899", bg: "#fdf2f8", icon: "🍜" },
+    Hiburan: { color: "#6366f1", bg: "#eef2ff", icon: "🎮" },
+    Default: { color: "#64748b", bg: "#f1f5f9", icon: "📦" },
 };
 
-const MONTHS = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
-];
+export default function DashboardPremium() {
+    const now = useMemo(() => new Date(), []);
+    const [currentMonth] = useState(now.getMonth());
+    const [currentYear] = useState(now.getFullYear());
 
-const DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const greeting = useMemo(() => getGreeting(), []);
 
-function formatRupiah(amount) {
-    return "Rp " + amount.toLocaleString("id-ID");
-}
-
-function formatDateLabel(dateStr) {
-    const d = new Date(dateStr);
-    return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function LogoutIcon() {
-    return (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-        </svg>
-    );
-}
-
-function ArrowUpIcon() {
-    return (
-        <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-            <polyline points="17 6 23 6 23 12" />
-        </svg>
-    );
-}
-
-function ArrowDownIcon() {
-    return (
-        <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-            <polyline points="17 18 23 18 23 12" />
-        </svg>
-    );
-}
-
-function SearchIcon() {
-    return (
-        <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-    );
-}
-
-function PlusIcon() {
-    return (
-        <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-    );
-}
-
-function ChevronLeft() {
-    return (
-        <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polyline points="15 18 9 12 15 6" />
-        </svg>
-    );
-}
-
-function ChevronRight() {
-    return (
-        <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polyline points="9 18 15 12 9 6" />
-        </svg>
-    );
-}
-
-function ChevronDown() {
-    return (
-        <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polyline points="6 9 12 15 18 9" />
-        </svg>
-    );
-}
-
-function XIcon() {
-    return (
-        <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-    );
-}
-
-function SummaryCard({ label, amount, type }) {
-    const isIncome = type === "pemasukan";
-    const isBalance = type === "saldo";
-    return (
-        <div
-            style={{
-                background: isBalance ? "#111827" : "#fff",
-                border: "1.5px solid",
-                borderColor: isBalance ? "#111827" : "#f3f4f6",
-                borderRadius: "16px",
-                padding: "20px 24px",
-                flex: 1,
-                minWidth: 0,
-            }}
-        >
-            <div
-                style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: isBalance ? "#9ca3af" : "#6b7280",
-                    marginBottom: "10px",
-                }}
-            >
-                {label}
-            </div>
-            <div
-                style={{
-                    fontSize: "22px",
-                    fontWeight: 700,
-                    color: isBalance
-                        ? "#fff"
-                        : isIncome
-                          ? "#059669"
-                          : "#dc2626",
-                    fontFamily: "'DM Mono', monospace",
-                    letterSpacing: "-0.5px",
-                }}
-            >
-                {isBalance ? "" : isIncome ? "+" : "-"}
-                {formatRupiah(amount)}
-            </div>
-        </div>
-    );
-}
-
-export default function AplikasiKeuangan() {
-    const today = new Date();
-    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-    const [currentYear, setCurrentYear] = useState(today.getFullYear());
-    const [filter, setFilter] = useState("Semua");
-    const [search, setSearch] = useState("");
-    const [transactions, setTransactions] = useState({});
     const [showModal, setShowModal] = useState(false);
+
+    const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+    const showToast = (message, type = 'info') => setToast({ show: true, message, type });
+
+    // Data dari backend
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [transactionsByDate, setTransactionsByDate] = useState({});
+    const [categories, setCategories] = useState([]);
+    const [accounts, setAccounts] = useState([]);
+    const [savings, setSavings] = useState([]);
+
+    const { auth } = usePage().props;
+    const user = auth.user;
+
+    // Saldo real-time (polling)
+    const [saldo, setSaldo] = useState(null);
+    const [saldoError, setSaldoError] = useState(null);
+    const [saldoLoading, setSaldoLoading] = useState(true);
+
+    // Form tambah transaksi
+    const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
         type: "pemasukan",
         category_id: "",
         account_id: "",
         amount: "",
         description: "",
-        transaction_date: today.toISOString().split("T")[0],
+        transaction_date: now.toISOString().split("T")[0],
+        saving_id: null,
     });
-    const [filterOpen, setFilterOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [saving, setSaving] = useState(false);
-    const [categories, setCategories] = useState([]);
-    const [accounts, setAccounts] = useState([]);
+
+    // Header search (sementara hanya untuk transaksi yang render)
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
-        const fetchTransactions = async () => {
+        const fetchSaldo = async () => {
+            try {
+                setSaldoLoading(true);
+                setSaldoError(null);
+
+                const json = await apiFetch("/api/summary/saldo");
+                if (!json || !json.success) throw new Error("Gagal mengambil saldo");
+                setSaldo(json.data || null);
+            } catch (e) {
+                setSaldoError(e.message || "Terjadi kesalahan");
+            } finally {
+                setSaldoLoading(false);
+            }
+        };
+
+        const fetchAll = async () => {
             try {
                 setLoading(true);
-                const response = await fetch("/api/transactions");
-                if (!response.ok)
-                    throw new Error("Gagal mengambil data transaksi");
+                setError(null);
 
-                const result = await response.json();
-                const groupedTx = {};
-                result.data.forEach((tx) => {
+                const [txJson, catJson, accJson, savJson] = await Promise.all([
+                    apiFetch("/api/transactions"),
+                    apiFetch("/api/categories"),
+                    apiFetch("/api/accounts"),
+                    apiFetch("/api/savings"),
+                ]);
+
+                if (!txJson) throw new Error("Gagal mengambil transaksi");
+                if (!catJson) throw new Error("Gagal mengambil kategori");
+                if (!accJson) throw new Error("Gagal mengambil akun");
+                if (!savJson) throw new Error("Gagal mengambil tabungan");
+
+                setCategories(catJson.data || []);
+                setAccounts(accJson.data || []);
+                setSavings(savJson.data || []);
+
+                const grouped = {};
+                (txJson.data || []).forEach((tx) => {
                     const dateKey = tx.transaction_date;
-                    if (!groupedTx[dateKey]) groupedTx[dateKey] = [];
-                    groupedTx[dateKey].push({
+                    if (!grouped[dateKey]) grouped[dateKey] = [];
+                    grouped[dateKey].push({
                         id: tx.id,
                         type: tx.type,
                         category: tx.category?.name || "Uncategorized",
@@ -290,114 +118,42 @@ export default function AplikasiKeuangan() {
                         transaction_date: tx.transaction_date,
                         category_id: tx.category_id,
                         account_id: tx.account_id,
-                        saving_id: tx.saving_id,
+                        saving_id: tx.saving_id || null,
                     });
                 });
 
-                setTransactions(groupedTx);
-                setError(null);
-            } catch (err) {
-                setError(err.message);
-                console.error("Error fetching transactions:", err);
+                setTransactionsByDate(grouped);
+            } catch (e) {
+                setError(e.message || "Terjadi kesalahan");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchTransactions();
+        fetchSaldo();
+        fetchAll();
+
+        const intervalId = setInterval(() => {
+            fetchSaldo();
+        }, 4000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
-    useEffect(() => {
-        const fetchMetadata = async () => {
-            try {
-                const [catRes, accRes] = await Promise.all([
-                    fetch("/api/categories"),
-                    fetch("/api/accounts"),
-                ]);
-                if (catRes.ok) {
-                    const catData = await catRes.json();
-                    setCategories(catData.data || []);
-                }
-                if (accRes.ok) {
-                    const accData = await accRes.json();
-                    setAccounts(accData.data || []);
-                }
-            } catch (err) {
-                console.error("Error fetching metadata:", err);
-            }
-        };
-
-        fetchMetadata();
-    }, []);
-
-    const filterOptions = ["Semua", "Pemasukan", "Pengeluaran"];
-
-    function prevMonth() {
-        if (currentMonth === 0) {
-            setCurrentMonth(11);
-            setCurrentYear((y) => y - 1);
-        } else {
-            setCurrentMonth((m) => m - 1);
-        }
-    }
-
-    function nextMonth() {
-        if (currentMonth === 11) {
-            setCurrentMonth(0);
-            setCurrentYear((y) => y + 1);
-        } else {
-            setCurrentMonth((m) => m + 1);
-        }
-    }
-
-    const filteredDates = Object.keys(transactions)
-        .filter((d) => {
-            const date = new Date(d);
-            return (
-                date.getMonth() === currentMonth &&
-                date.getFullYear() === currentYear
+    const recentTransactions = useMemo(() => {
+        let allTxs = Object.values(transactionsByDate).flat();
+        allTxs.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
+        
+        const q = search.trim().toLowerCase();
+        if (q) {
+            allTxs = allTxs.filter((tx) =>
+                (tx.description || "").toLowerCase().includes(q) ||
+                (tx.category || "").toLowerCase().includes(q)
             );
-        })
-        .sort((a, b) => new Date(b) - new Date(a));
-
-    function getTxForDate(dateStr) {
-        return (transactions[dateStr] || []).filter((tx) => {
-            const matchFilter =
-                filter === "Semua" || tx.type === filter.toLowerCase();
-            const matchSearch =
-                search === "" ||
-                tx.description.toLowerCase().includes(search.toLowerCase()) ||
-                tx.category.toLowerCase().includes(search.toLowerCase());
-            return matchFilter && matchSearch;
-        });
-    }
-
-    const allTx = Object.values(transactions).flat();
-    const totalIncome = allTx
-        .filter((t) => t.type === "pemasukan")
-        .reduce((s, t) => s + t.amount, 0);
-    const totalExpense = allTx
-        .filter((t) => t.type === "pengeluaran")
-        .reduce((s, t) => s + t.amount, 0);
-    const balance = totalIncome - totalExpense;
-
-    async function handleLogout() {
-        if (!window.confirm("Yakin ingin keluar?")) return;
-        try {
-            await fetch("/logout", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || "",
-                    Accept: "application/json",
-                },
-            });
-        } catch (e) {
-            console.error(e);
-        } finally {
-            window.location.href = "/login";
         }
-    }
-    
+        return allTxs.slice(0, 5);
+    }, [transactionsByDate, search]);
+
     async function handleAddTransaction() {
         if (
             !form.category_id ||
@@ -405,56 +161,50 @@ export default function AplikasiKeuangan() {
             !form.amount ||
             !form.description
         ) {
-            alert("Mohon isi semua field");
+            showToast('Mohon isi semua field yang wajib', 'warning');
             return;
         }
 
         try {
             setSaving(true);
-            const response = await fetch("/api/transactions", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-CSRF-TOKEN":
-                        document.querySelector('meta[name="csrf-token"]')
-                            ?.content || "",
-                },
-                body: JSON.stringify({
-                    category_id: form.category_id,
-                    account_id: form.account_id,
-                    type: form.type,
-                    amount: parseFloat(form.amount),
-                    description: form.description,
-                    transaction_date: form.transaction_date,
-                    saving_id: form.saving_id || null,
-                }),
-            });
 
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.message || "Gagal menyimpan transaksi");
-            }
-
-            const result = await response.json();
-            const dateKey = result.data.transaction_date;
-            const newTx = {
-                id: result.data.id,
-                type: result.data.type,
-                category: result.data.category?.name || "Uncategorized",
-                account: result.data.account?.name || "",
-                amount: parseFloat(result.data.amount),
-                description: result.data.description,
-                transaction_date: result.data.transaction_date,
-                category_id: result.data.category_id,
-                account_id: result.data.account_id,
+            const payload = {
+                category_id: form.category_id,
+                account_id: form.account_id,
+                type: form.type,
+                amount: parseFloat(form.amount),
+                description: form.description,
+                transaction_date: form.transaction_date,
+                saving_id: form.saving_id || null,
             };
 
-            setTransactions((prev) => ({
+            const result = await apiFetch("/api/transactions", {
+                method: "POST",
+                body: JSON.stringify(payload),
+            });
+
+            const created = result.data;
+
+            const dateKey = created.transaction_date;
+            const newTx = {
+                id: created.id,
+                type: created.type,
+                category: created.category?.name || "Uncategorized",
+                account: created.account?.name || "",
+                amount: parseFloat(created.amount),
+                description: created.description,
+                transaction_date: created.transaction_date,
+                category_id: created.category_id,
+                account_id: created.account_id,
+                saving_id: created.saving_id || null,
+            };
+
+            setTransactionsByDate((prev) => ({
                 ...prev,
                 [dateKey]: [newTx, ...(prev[dateKey] || [])],
             }));
 
+            setShowModal(false);
             setForm({
                 type: "pemasukan",
                 category_id: "",
@@ -462,794 +212,1140 @@ export default function AplikasiKeuangan() {
                 amount: "",
                 description: "",
                 transaction_date: new Date().toISOString().split("T")[0],
+                saving_id: null,
             });
-            setShowModal(false);
-            alert("Transaksi berhasil disimpan!");
-        } catch (err) {
-            alert("Error: " + err.message);
-            console.error("Error saving transaction:", err);
+
+            showToast('Transaksi berhasil disimpan!', 'success');
+        } catch (e) {
+            showToast(e.message || 'Terjadi kesalahan', 'error');
         } finally {
             setSaving(false);
         }
     }
 
     return (
-        <div
-            style={{
-                minHeight: "100vh",
-                background: "#f9fafb",
-                fontFamily: "'DM Sans', 'Nunito', sans-serif",
-            }}
-        >
+        <AppLayout title="Dashboard">
+            {/*ubah font disini bro*/}
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-                * { box-sizing: border-box; margin: 0; padding: 0; }
-                .logout-btn:hover { background: rgba(255,255,255,0.25) !important; }
-                .tx-row:hover { background: #f9fafb !important; }
-                .nav-btn:hover { background: #f3f4f6 !important; }
-                .filter-opt:hover { background: #f3f4f6 !important; }
-                .add-btn:hover { background: #1f2937 !important; }
-                .modal-overlay { animation: fadeIn 0.15s ease; }
-                .modal-box { animation: slideUp 0.2s ease; }
-                @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-                @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-                input:focus, select:focus { outline: none !important; border-color: #111827 !important; }
-                input::placeholder { color: #fff !important; }
-                input::-webkit-input-placeholder { color: #fff !important; }
-                input::-moz-placeholder { color: #fff !important; }
-                input:-ms-input-placeholder { color: #fff !important; }
-                ::-webkit-scrollbar { width: 6px; }
-                ::-webkit-scrollbar-track { background: transparent; }
-                ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+                * { transition: all 0.2s ease-in-out; }
+                .action-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+                .btn-primary:hover { background: #1d4ed8 !important; transform: scale(1.02); }
+                input:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
             `}</style>
 
-            {/* Header */}
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
+            )}
+
             <div
                 style={{
-                    background:
-                        "linear-gradient(135deg, #1e40af 0%, #2563eb 100%)",
-                    borderBottom: "none",
-                    padding: "0 32px",
-                    height: "64px",
                     display: "flex",
-                    alignItems: "center",
-                    gap: "20px",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 10,
-                    boxShadow: "0 4px 12px rgba(30, 64, 175, 0.2)",
+                    flexDirection: "column",
+                    minHeight: "100%",
+                    background: colors.background,
                 }}
             >
-                <div
+                {/* --- HEADER --- */}
+                <header
                     style={{
-                        fontWeight: 800,
-                        fontSize: "24px",
-                        letterSpacing: "-0.5px",
-                        flex: "0 0 auto",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "2px",
-                    }}
-                >
-                    <span style={{ color: "#fff" }}>Finance</span>
-                    <span style={{ color: "#e0e7ff" }}>Ku</span>
-                    <span style={{ color: "#e0e7ff", marginLeft: "2px" }}>
-                        .
-                    </span>
-                </div>
-                <div
-                    style={{
-                        flex: 1,
-                        position: "relative",
-                        maxWidth: "420px",
-                        margin: "0 auto",
-                    }}
-                >
-                    <span
-                        style={{
-                            position: "absolute",
-                            left: "14px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            color: "#fff",
-                        }}
-                    >
-                        <SearchIcon />
-                    </span>
-                    <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari transaksi..."
-                        style={{
-                            width: "100%",
-                            padding: "9px 14px 9px 38px",
-                            border: "1.5px solid rgba(255,255,255,0.2)",
-                            borderRadius: "10px",
-                            fontSize: "14px",
-                            background: "rgba(255,255,255,0.15)",
-                            color: "#fff",
-                            fontFamily: "inherit",
-                        }}
-                    />
-                </div>
-                <div style={{ flex: "0 0 auto", position: "relative" }}>
-                    <button
-                        onClick={() => setFilterOpen((o) => !o)}
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "9px 14px",
-                            border: "1.5px solid rgba(255,255,255,0.2)",
-                            borderRadius: "10px",
-                            background: "rgba(255,255,255,0.15)",
-                            fontSize: "14px",
-                            fontWeight: 500,
-                            color: "#fff",
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                        }}
-                    >
-                        {filter} <ChevronDown />
-                    </button>
-                    {filterOpen && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                right: 0,
-                                top: "calc(100% + 6px)",
-                                background: "#fff",
-                                border: "1.5px solid #e5e7eb",
-                                borderRadius: "10px",
-                                minWidth: "140px",
-                                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                                overflow: "hidden",
-                                zIndex: 20,
-                            }}
-                        >
-                            {filterOptions.map((opt) => (
-                                <div
-                                    key={opt}
-                                    className="filter-opt"
-                                    onClick={() => {
-                                        setFilter(opt);
-                                        setFilterOpen(false);
-                                    }}
-                                    style={{
-                                        padding: "10px 16px",
-                                        fontSize: "14px",
-                                        cursor: "pointer",
-                                        fontWeight: filter === opt ? 600 : 400,
-                                        color: "#111827",
-                                    }}
-                                >
-                                    {opt}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                    
-                </div>
-                {/* Logout Button */}
-                <button
-                    className="logout-btn"
-                    onClick={handleLogout}
-                    style={{
-                        display: "flex", alignItems: "center", gap: "6px",
-                        padding: "9px 16px",
-                        border: "1.5px solid rgba(255,255,255,0.3)",
-                        borderRadius: "10px",
-                        background: "rgba(255,255,255,0.1)",
-                        fontSize: "14px", fontWeight: 600, color: "#fff",
-                        cursor: "pointer", fontFamily: "inherit",
-                        transition: "background 0.15s",
-                        flexShrink: 0,
-                    }}
-                >
-                    <LogoutIcon />
-                    Keluar
-                </button>
-            </div>
-
-            <div
-                style={{
-                    maxWidth: "900px",
-                    margin: "0 auto",
-                    padding: "28px 24px",
-                }}
-            >
-                {/* Summary Cards */}
-                <div
-                    style={{
-                        display: "flex",
-                        gap: "14px",
-                        marginBottom: "28px",
-                    }}
-                >
-                    <SummaryCard label="Saldo" amount={balance} type="saldo" />
-                    <SummaryCard
-                        label="Total Pemasukan"
-                        amount={totalIncome}
-                        type="pemasukan"
-                    />
-                    <SummaryCard
-                        label="Total Pengeluaran"
-                        amount={totalExpense}
-                        type="pengeluaran"
-                    />
-                </div>
-
-                {/* Month Nav + Add Button */}
-                <div
-                    style={{
+                        height: "90px",
+                        background: "rgba(248, 250, 252, 0.8)",
+                        backdropFilter: "blur(10px)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        marginBottom: "20px",
+                        padding: "0 40px",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 40,
                     }}
                 >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                        }}
-                    >
-                        <span
-                            style={{
-                                fontWeight: 700,
-                                fontSize: "18px",
-                                color: "#111827",
-                                letterSpacing: "-0.3px",
-                                marginRight: "8px",
-                            }}
-                        >
-                            Riwayat Transaksi
-                        </span>
-                        <button
-                            className="nav-btn"
-                            onClick={prevMonth}
-                            style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "8px",
-                                border: "1.5px solid #e5e7eb",
-                                background: "#fff",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#374151",
-                            }}
-                        >
-                            <ChevronLeft />
-                        </button>
-                        <span
+                    <div>
+                        <p
                             style={{
                                 fontSize: "14px",
-                                fontWeight: 600,
-                                color: "#374151",
-                                minWidth: "100px",
-                                textAlign: "center",
+                                color: colors.textMuted,
+                                fontWeight: 500,
                             }}
                         >
-                            {MONTHS[currentMonth]} {currentYear}
-                        </span>
-                        <button
-                            className="nav-btn"
-                            onClick={nextMonth}
+                            Halo, {greeting}!
+                        </p>
+                        <h1
                             style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "8px",
-                                border: "1.5px solid #e5e7eb",
-                                background: "#fff",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#374151",
+                                fontSize: "20px",
+                                fontWeight: 800,
+                                color: colors.textMain,
                             }}
                         >
-                            <ChevronRight />
-                        </button>
+                            Ringkasan Keuangan
+                        </h1>
                     </div>
-                    <button
-                        className="add-btn"
-                        onClick={() => setShowModal(true)}
+
+                    <div
                         style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "8px",
-                            padding: "10px 20px",
-                            background: "#111827",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "10px",
-                            fontSize: "14px",
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                            transition: "background 0.15s",
+                            gap: "24px",
                         }}
                     >
-                        <PlusIcon /> Tambah Transaksi
-                    </button>
-                </div>
-
-                {/* Transaction List */}
-                {loading && (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "60px 0",
-                            color: "#9ca3af",
-                            fontSize: "15px",
-                        }}
-                    >
-                        Loading transaksi...
-                    </div>
-                )}
-                {error && (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "20px",
-                            background: "#fee2e2",
-                            border: "1.5px solid #fca5a5",
-                            borderRadius: "12px",
-                            color: "#991b1b",
-                            fontSize: "14px",
-                            marginBottom: "20px",
-                        }}
-                    >
-                        Error: {error}
-                    </div>
-                )}
-                {!loading && filteredDates.length === 0 && (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "60px 0",
-                            color: "#9ca3af",
-                            fontSize: "15px",
-                        }}
-                    >
-                        Tidak ada transaksi di bulan ini.
-                    </div>
-                )}
-                {filteredDates.map((dateStr) => {
-                    const txs = getTxForDate(dateStr);
-                    if (txs.length === 0) return null;
-                    return (
+                        <div style={{ position: "relative" }}>
+                            <input
+                                type="text"
+                                placeholder="Cari apapun..."
+                                style={{
+                                    padding: "12px 16px 12px 45px",
+                                    borderRadius: "14px",
+                                    border: "1px solid #e2e8f0",
+                                    background: "#fff",
+                                    width: "260px",
+                                    fontSize: "14px",
+                                }}
+                            />
+                            <span
+                                style={{
+                                    position: "absolute",
+                                    left: "16px",
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                }}
+                            >
+                                🔍
+                            </span>
+                        </div>
                         <div
-                            key={dateStr}
                             style={{
+                                width: "45px",
+                                height: "45px",
+                                borderRadius: "14px",
                                 background: "#fff",
-                                border: "1.5px solid #f3f4f6",
-                                borderRadius: "16px",
-                                marginBottom: "16px",
+                                border: "1px solid #e2e8f0",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                fontSize: "20px",
+                            }}
+                        >
+                            🔔
+                        </div>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                                paddingLeft: "12px",
+                                borderLeft: "1px solid #e2e8f0",
+                            }}
+                        >
+                            <div style={{ textAlign: "right" }}>
+                                <p
+                                    style={{
+                                        fontSize: "14px",
+                                        fontWeight: 700,
+                                    }}
+                                >
+                                    {user.name}
+                                </p>
+                                <p
+                                    style={{
+                                        fontSize: "12px",
+                                        color: colors.textMuted,
+                                    }}
+                                >
+                                    Premium User
+                                </p>
+                            </div>
+                            <div
+                                style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    borderRadius: "16px",
+                                    background:
+                                        "linear-gradient(45deg, #cbd5e1, #94a3b8)",
+                                    border: "2px solid #fff",
+                                    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                                }}
+                            ></div>
+                        </div>
+                    </div>
+                </header>
+
+                <div style={{ padding: "0 40px 40px 40px" }}>
+                    {/* --- KARTU UTAMA (RINGKASAN) --- */}
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(3, 1fr)",
+                            gap: "24px",
+                            marginBottom: "40px",
+                        }}
+                    >
+                        <div
+                            className="action-card"
+                            style={{
+                                background:
+                                    "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                                padding: "32px",
+                                borderRadius: "32px",
+                                color: "#fff",
+                                position: "relative",
                                 overflow: "hidden",
                             }}
                         >
-                            <div
+                            <p
                                 style={{
-                                    padding: "16px 24px 12px",
-                                    borderBottom: "1.5px solid #f3f4f6",
+                                    fontSize: "14px",
+                                    opacity: 0.7,
+                                    marginBottom: "8px",
+                                    fontWeight: 600,
                                 }}
                             >
-                                <span
+                                TOTAL SALDO SAYA
+                            </p>
+                            <h2
+                                style={{
+                                    fontSize: "32px",
+                                    fontWeight: 800,
+                                    marginBottom: "24px",
+                                }}
+                            >
+                                {saldoLoading
+                                    ? "..."
+                                    : saldo
+                                      ? formatRupiah(saldo.total_saldo)
+                                      : "Rp 0"}
+                            </h2>
+                            <div style={{ display: "flex", gap: "12px" }}>
+                                <div
                                     style={{
-                                        fontWeight: 700,
-                                        fontSize: "15px",
-                                        color: "#111827",
+                                        padding: "8px 16px",
+                                        borderRadius: "12px",
+                                        background: "rgba(255,255,255,0.1)",
+                                        fontSize: "13px",
+                                        fontWeight: 600,
                                     }}
                                 >
-                                    {formatDateLabel(dateStr)}
-                                </span>
+                                    +2.4% bln ini
+                                </div>
                             </div>
-                            <table
+                            <div
                                 style={{
-                                    width: "100%",
-                                    borderCollapse: "collapse",
+                                    position: "absolute",
+                                    right: "-20px",
+                                    bottom: "-20px",
+                                    width: "120px",
+                                    height: "120px",
+                                    background: "rgba(37, 99, 235, 0.2)",
+                                    borderRadius: "50%",
+                                    filter: "blur(40px)",
+                                }}
+                            ></div>
+                        </div>
+
+                        {[
+                            {
+                                label: "PEMASUKAN",
+                                amount: saldoLoading
+                                    ? "..."
+                                    : saldo
+                                      ? formatRupiah(saldo.pemasukan)
+                                      : "Rp 0",
+                                color: colors.success,
+                                icon: "📈",
+                            },
+                            {
+                                label: "PENGELUARAN",
+                                amount: saldoLoading
+                                    ? "..."
+                                    : saldo
+                                      ? formatRupiah(saldo.pengeluaran)
+                                      : "Rp 0",
+                                color: colors.danger,
+                                icon: "📉",
+                            },
+                        ].map((stat) => (
+                            <div
+                                key={stat.label}
+                                className="action-card"
+                                style={{
+                                    background: "#fff",
+                                    padding: "32px",
+                                    borderRadius: "32px",
+                                    border: "1px solid #e2e8f0",
                                 }}
                             >
-                                <thead>
-                                    <tr
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        marginBottom: "12px",
+                                    }}
+                                >
+                                    <p
                                         style={{
-                                            borderBottom: "1.5px solid #f3f4f6",
+                                            fontSize: "14px",
+                                            color: colors.textMuted,
+                                            fontWeight: 700,
                                         }}
                                     >
-                                        {[
-                                            {
-                                                label: "No",
-                                                align: "left",
-                                                width: "48px",
-                                            },
-                                            { label: "Tipe", align: "left" },
-                                            {
-                                                label: "Kategori",
-                                                align: "left",
-                                            },
-                                            { label: "Jumlah", align: "right" },
-                                            {
-                                                label: "Deskripsi",
-                                                align: "left",
-                                            },
-                                        ].map((h) => (
-                                            <th
-                                                key={h.label}
-                                                style={{
-                                                    padding: "10px 12px",
-                                                    textAlign: h.align,
-                                                    fontSize: "12px",
-                                                    fontWeight: 600,
-                                                    color: "#9ca3af",
-                                                    letterSpacing: "0.05em",
-                                                    width: h.width || "auto",
-                                                }}
-                                            >
-                                                {h.label}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {txs.map((tx, i) => {
+                                        {stat.label}
+                                    </p>
+                                    <span style={{ fontSize: "24px" }}>
+                                        {stat.icon}
+                                    </span>
+                                </div>
+                                <h2
+                                    style={{
+                                        fontSize: "28px",
+                                        fontWeight: 800,
+                                        color: colors.textMain,
+                                    }}
+                                >
+                                    {stat.amount}
+                                </h2>
+                                <p
+                                    style={{
+                                        fontSize: "13px",
+                                        color: stat.color,
+                                        fontWeight: 600,
+                                        marginTop: "8px",
+                                    }}
+                                >
+                                    Lihat detail transaksi →
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* --- TRANSAKSI TERBARU & TARGET --- */}
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 380px",
+                            gap: "32px",
+                        }}
+                    >
+                        <section>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "24px",
+                                }}
+                            >
+                                <h3
+                                    style={{
+                                        fontSize: "20px",
+                                        fontWeight: 800,
+                                    }}
+                                >
+                                    Transaksi Terakhir
+                                </h3>
+                                <button
+                                    className="btn-primary"
+                                    style={{
+                                        padding: "12px 24px",
+                                        borderRadius: "14px",
+                                        border: "none",
+                                        background: colors.primary,
+                                        color: "#fff",
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                    }}
+                                    onClick={() => setShowModal(true)}
+                                >
+                                    <span>+</span> Tambah Baru
+                                </button>
+                            </div>
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "16px",
+                                }}
+                            >
+                                {loading && (
+                                    <div
+                                        className="action-card"
+                                        style={{
+                                            padding: "20px 24px",
+                                            borderRadius: "24px",
+                                            border: "1px solid #f1f5f9",
+                                            background: "#fff",
+                                            color: colors.textMuted,
+                                        }}
+                                    >
+                                        Loading transaksi...
+                                    </div>
+                                )}
+                                {!loading && error && (
+                                    <div
+                                        className="action-card"
+                                        style={{
+                                            padding: "20px 24px",
+                                            borderRadius: "24px",
+                                            border: "1px solid #fee2e2",
+                                            background: "#fff",
+                                            color: "#b91c1c",
+                                        }}
+                                    >
+                                        Error: {error}
+                                    </div>
+                                )}
+                                {!loading &&
+                                    !error &&
+                                    recentTransactions.length === 0 && (
+                                        <div
+                                            className="action-card"
+                                            style={{
+                                                padding: "20px 24px",
+                                                borderRadius: "24px",
+                                                border: "1px solid #f1f5f9",
+                                                background: "#fff",
+                                                color: colors.textMuted,
+                                            }}
+                                        >
+                                            Tidak ada transaksi.
+                                        </div>
+                                    )}
+                                {!loading &&
+                                    !error &&
+                                    recentTransactions.map((tx) => {
+                                        const styleKey =
+                                            tx.category in categoryStyle
+                                                ? tx.category
+                                                : "Default";
+                                        const cs = categoryStyle[styleKey];
                                         const isIncome =
                                             tx.type === "pemasukan";
+
                                         return (
-                                            <tr
+                                            <div
                                                 key={tx.id}
-                                                className="tx-row"
+                                                className="action-card"
                                                 style={{
-                                                    borderBottom:
-                                                        i < txs.length - 1
-                                                            ? "1.5px solid #f9fafb"
-                                                            : "none",
-                                                    transition:
-                                                        "background 0.1s",
+                                                    background: "#fff",
+                                                    padding: "20px 24px",
+                                                    borderRadius: "24px",
+                                                    border: "1px solid #f1f5f9",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent:
+                                                        "space-between",
                                                 }}
                                             >
-                                                <td
+                                                <div
                                                     style={{
-                                                        padding: "14px 12px",
-                                                        fontSize: "14px",
-                                                        color: "#9ca3af",
-                                                        fontWeight: 500,
-                                                    }}
-                                                >
-                                                    {i + 1}
-                                                </td>
-                                                <td
-                                                    style={{
-                                                        padding: "14px 12px",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "20px",
                                                     }}
                                                 >
                                                     <div
                                                         style={{
+                                                            width: "56px",
+                                                            height: "56px",
+                                                            borderRadius:
+                                                                "18px",
+                                                            background: cs.bg,
                                                             display: "flex",
                                                             alignItems:
                                                                 "center",
-                                                            gap: "8px",
+                                                            justifyContent:
+                                                                "center",
+                                                            fontSize: "24px",
                                                         }}
                                                     >
-                                                        <div
+                                                        {cs.icon}
+                                                    </div>
+                                                    <div>
+                                                        <p
                                                             style={{
-                                                                width: "30px",
-                                                                height: "30px",
-                                                                borderRadius:
-                                                                    "8px",
-                                                                background:
-                                                                    isIncome
-                                                                        ? "#dcfce7"
-                                                                        : "#fee2e2",
-                                                                display: "flex",
-                                                                alignItems:
-                                                                    "center",
-                                                                justifyContent:
-                                                                    "center",
-                                                                color: isIncome
-                                                                    ? "#16a34a"
-                                                                    : "#dc2626",
-                                                                flexShrink: 0,
+                                                                fontWeight: 800,
+                                                                fontSize:
+                                                                    "16px",
+                                                                color: colors.textMain,
                                                             }}
                                                         >
-                                                            {isIncome ? (
-                                                                <ArrowUpIcon />
-                                                            ) : (
-                                                                <ArrowDownIcon />
-                                                            )}
-                                                        </div>
-                                                        <span
+                                                            {tx.category}
+                                                        </p>
+                                                        <p
                                                             style={{
                                                                 fontSize:
-                                                                    "14px",
-                                                                fontWeight: 600,
-                                                                color: isIncome
-                                                                    ? "#16a34a"
-                                                                    : "#dc2626",
+                                                                    "13px",
+                                                                color: colors.textMuted,
+                                                                fontWeight: 500,
                                                             }}
                                                         >
-                                                            {isIncome
-                                                                ? "Pemasukan"
-                                                                : "Pengeluaran"}
-                                                        </span>
+                                                            {new Date(
+                                                                tx.transaction_date,
+                                                            ).toLocaleDateString(
+                                                                "id-ID",
+                                                                {
+                                                                    day: "2-digit",
+                                                                    month: "short",
+                                                                    year: "numeric",
+                                                                },
+                                                            )}
+                                                            {tx.account
+                                                                ? ` • ${tx.account}`
+                                                                : ""}
+                                                        </p>
                                                     </div>
-                                                </td>
-                                                <td
+                                                </div>
+                                                <div
                                                     style={{
-                                                        padding: "14px 12px",
+                                                        textAlign: "right",
                                                     }}
                                                 >
-                                                    <span
+                                                    <p
                                                         style={{
-                                                            padding: "4px 12px",
-                                                            borderRadius:
-                                                                "99px",
-                                                            fontSize: "13px",
-                                                            fontWeight: 600,
-                                                            background:
-                                                                categoryColors[
-                                                                    tx.category
-                                                                ] || "#f3f4f6",
-                                                            color:
-                                                                categoryText[
-                                                                    tx.category
-                                                                ] || "#374151",
+                                                            fontWeight: 800,
+                                                            fontSize: "18px",
+                                                            color: isIncome
+                                                                ? colors.success
+                                                                : colors.danger,
                                                         }}
                                                     >
-                                                        {tx.category}
-                                                    </span>
-                                                </td>
-                                                <td
+                                                        {isIncome ? "+" : "-"}
+                                                        Rp{" "}
+                                                        {Math.round(
+                                                            tx.amount,
+                                                        ).toLocaleString(
+                                                            "id-ID",
+                                                        )}
+                                                    </p>
+                                                    <div
+                                                        style={{
+                                                            fontSize: "11px",
+                                                            color: colors.textMuted,
+                                                            background:
+                                                                "#f1f5f9",
+                                                            padding: "2px 8px",
+                                                            borderRadius: "6px",
+                                                            display:
+                                                                "inline-block",
+                                                            marginTop: "4px",
+                                                        }}
+                                                    >
+                                                        {isIncome
+                                                            ? "Pemasukan"
+                                                            : "Pengeluaran"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                {!loading &&
+                                    !error &&
+                                    recentTransactions.length > 0 && (
+                                        <div
+                                            style={{
+                                                textAlign: "center",
+                                                marginTop: "8px",
+                                            }}
+                                        >
+                                            <Link
+                                                href="/transaksi"
+                                                style={{
+                                                    color: colors.primary,
+                                                    fontWeight: 700,
+                                                    fontSize: "14px",
+                                                    textDecoration: "none",
+                                                }}
+                                            >
+                                                Lihat Semua Transaksi →
+                                            </Link>
+                                        </div>
+                                    )}
+                            </div>
+                        </section>
+
+                        <aside
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "24px",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    background: "#fff",
+                                    padding: "32px",
+                                    borderRadius: "32px",
+                                    border: "1px solid #e2e8f0",
+                                }}
+                            >
+                                <h3
+                                    style={{
+                                        fontSize: "18px",
+                                        fontWeight: 800,
+                                        marginBottom: "20px",
+                                    }}
+                                >
+                                    🎯 Target Tabungan
+                                </h3>
+                                {loading ? (
+                                    <p
+                                        style={{
+                                            fontSize: "14px",
+                                            color: colors.textMuted,
+                                        }}
+                                    >
+                                        Loading...
+                                    </p>
+                                ) : savings.length === 0 ? (
+                                    <p
+                                        style={{
+                                            fontSize: "14px",
+                                            color: colors.textMuted,
+                                            marginBottom: "24px",
+                                        }}
+                                    >
+                                        Belum ada target tabungan.
+                                    </p>
+                                ) : (
+                                    savings.map((saving) => {
+                                        const percentage =
+                                            saving.target_amount > 0
+                                                ? Math.min(
+                                                      100,
+                                                      Math.round(
+                                                          (saving.current_amount /
+                                                              saving.target_amount) *
+                                                              100,
+                                                      ),
+                                                  )
+                                                : 0;
+                                        return (
+                                            <div
+                                                key={saving.id}
+                                                style={{ marginBottom: "24px" }}
+                                            >
+                                                <div
                                                     style={{
-                                                        padding: "14px 12px",
-                                                        textAlign: "right",
+                                                        display: "flex",
+                                                        justifyContent:
+                                                            "space-between",
+                                                        marginBottom: "10px",
                                                     }}
                                                 >
                                                     <span
                                                         style={{
                                                             fontSize: "14px",
                                                             fontWeight: 700,
-                                                            color: isIncome
-                                                                ? "#059669"
-                                                                : "#dc2626",
-                                                            fontFamily:
-                                                                "'DM Mono', monospace",
                                                         }}
                                                     >
-                                                        {isIncome ? "+" : "-"}
-                                                        {formatRupiah(
-                                                            tx.amount,
-                                                        )}
+                                                        {saving.name}
                                                     </span>
-                                                </td>
-                                                <td
+                                                    <span
+                                                        style={{
+                                                            fontSize: "14px",
+                                                            fontWeight: 800,
+                                                            color: colors.primary,
+                                                        }}
+                                                    >
+                                                        {percentage}%
+                                                    </span>
+                                                </div>
+                                                <div
                                                     style={{
-                                                        padding: "14px 12px",
-                                                        fontSize: "14px",
-                                                        color: "#374151",
+                                                        height: "12px",
+                                                        background: "#f1f5f9",
+                                                        borderRadius: "10px",
+                                                        overflow: "hidden",
                                                     }}
                                                 >
-                                                    {tx.description}
-                                                </td>
-                                            </tr>
+                                                    <div
+                                                        style={{
+                                                            width: `${percentage}%`,
+                                                            height: "100%",
+                                                            background:
+                                                                "linear-gradient(90deg, #2563eb, #60a5fa)",
+                                                            borderRadius:
+                                                                "10px",
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                                <p
+                                                    style={{
+                                                        fontSize: "12px",
+                                                        color: colors.textMuted,
+                                                        marginTop: "10px",
+                                                    }}
+                                                >
+                                                    Terkumpul:{" "}
+                                                    <b
+                                                        style={{
+                                                            color: colors.textMain,
+                                                        }}
+                                                    >
+                                                        {formatRupiah(
+                                                            saving.current_amount,
+                                                        )}
+                                                    </b>{" "}
+                                                    /{" "}
+                                                    {formatRupiah(
+                                                        saving.target_amount,
+                                                    )}
+                                                </p>
+                                            </div>
                                         );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    );
-                })}
-            </div>
+                                    })
+                                )}
+                                <button
+                                    style={{
+                                        width: "100%",
+                                        padding: "12px",
+                                        borderRadius: "12px",
+                                        border: "1px solid #e2e8f0",
+                                        background: "none",
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                        color: colors.textMain,
+                                    }}
+                                >
+                                    Tambah Tabungan
+                                </button>
+                            </div>
 
-            {/* Modal */}
-            {showModal && (
-                <div
-                    className="modal-overlay"
-                    onClick={() => setShowModal(false)}
+                            <div
+                                style={{
+                                    background:
+                                        "linear-gradient(135deg, #4338ca 0%, #312e81 100%)",
+                                    padding: "32px",
+                                    borderRadius: "32px",
+                                    color: "#fff",
+                                }}
+                            >
+                                <h3
+                                    style={{
+                                        fontSize: "16px",
+                                        fontWeight: 700,
+                                        marginBottom: "12px",
+                                    }}
+                                >
+                                    Butuh Bantuan?
+                                </h3>
+                                <p
+                                    style={{
+                                        fontSize: "13px",
+                                        opacity: 0.8,
+                                        marginBottom: "20px",
+                                    }}
+                                >
+                                    Hubungi tim support kami jika Anda menemukan
+                                    kendala.
+                                </p>
+                                <button
+                                    style={{
+                                        padding: "10px 20px",
+                                        borderRadius: "10px",
+                                        border: "none",
+                                        background: "#fff",
+                                        color: "#312e81",
+                                        fontWeight: 800,
+                                        fontSize: "13px",
+                                    }}
+                                >
+                                    Buka Tiket
+                                </button>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+
+                {/* --- FOOTER --- */}
+                <footer
                     style={{
-                        position: "fixed",
-                        inset: 0,
-                        background: "rgba(0,0,0,0.4)",
+                        marginTop: "auto",
+                        padding: "40px",
+                        borderTop: "1px solid #e2e8f0",
+                        background: "#fff",
                         display: "flex",
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 100,
-                        backdropFilter: "blur(2px)",
                     }}
                 >
+                    <div>
+                        <p
+                            style={{
+                                fontSize: "14px",
+                                fontWeight: 700,
+                                color: colors.textMain,
+                            }}
+                        >
+                            FinanceKu v2.4.0
+                        </p>
+                        <p
+                            style={{
+                                fontSize: "12px",
+                                color: colors.textMuted,
+                            }}
+                        >
+                            © 2026 PT. Keuangan Digital Indonesia. Seluruh hak
+                            cipta dilindungi.
+                        </p>
+                    </div>
+                    <div style={{ display: "flex", gap: "32px" }}>
+                        {[
+                            "Kebijakan Privasi",
+                            "Syarat & Ketentuan",
+                            "Bantuan",
+                        ].map((link) => (
+                            <a
+                                key={link}
+                                href="#"
+                                style={{
+                                    fontSize: "13px",
+                                    fontWeight: 600,
+                                    color: colors.textMuted,
+                                    textDecoration: "none",
+                                }}
+                            >
+                                {link}
+                            </a>
+                        ))}
+                    </div>
+                </footer>
+
+                {/* --- MODAL TAMBAH TRANSAKSI --- */}
+                {showModal && (
                     <div
-                        className="modal-box"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={() => setShowModal(false)}
                         style={{
-                            background: "#fff",
-                            borderRadius: "20px",
-                            padding: "32px",
-                            width: "100%",
-                            maxWidth: "440px",
-                            boxShadow: "0 24px 64px rgba(0,0,0,0.16)",
+                            position: "fixed",
+                            inset: 0,
+                            background: "rgba(0,0,0,0.45)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 999,
+                            backdropFilter: "blur(4px)",
                         }}
                     >
                         <div
+                            onClick={(e) => e.stopPropagation()}
                             style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginBottom: "24px",
+                                width: "100%",
+                                maxWidth: 460,
+                                background: "#fff",
+                                borderRadius: 20,
+                                padding: 24,
+                                border: "1px solid #e5e7eb",
+                                boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
                             }}
                         >
-                            <h2
+                            <div
                                 style={{
-                                    fontSize: "18px",
-                                    fontWeight: 800,
-                                    color: "#111827",
-                                    letterSpacing: "-0.3px",
-                                }}
-                            >
-                                Tambah Transaksi
-                            </h2>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    borderRadius: "8px",
-                                    border: "1.5px solid #e5e7eb",
-                                    background: "#fff",
-                                    cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#6b7280",
+                                    justifyContent: "space-between",
+                                    marginBottom: 18,
                                 }}
                             >
-                                <XIcon />
-                            </button>
-                        </div>
-
-                        {[
-                            {
-                                label: "Tipe",
-                                key: "type",
-                                type: "select",
-                                options: [
-                                    { v: "pemasukan", l: "Pemasukan" },
-                                    { v: "pengeluaran", l: "Pengeluaran" },
-                                ],
-                            },
-                            {
-                                label: "Kategori",
-                                key: "category_id",
-                                type: "select",
-                                options: categories.map((c) => ({
-                                    v: c.id,
-                                    l: c.name,
-                                })),
-                            },
-                            {
-                                label: "Akun",
-                                key: "account_id",
-                                type: "select",
-                                options: accounts.map((a) => ({
-                                    v: a.id,
-                                    l: a.name,
-                                })),
-                            },
-                            {
-                                label: "Tanggal",
-                                key: "transaction_date",
-                                type: "date",
-                            },
-                            {
-                                label: "Jumlah (Rp)",
-                                key: "amount",
-                                type: "number",
-                                placeholder: "cth: 500000",
-                            },
-                            {
-                                label: "Deskripsi",
-                                key: "description",
-                                type: "text",
-                                placeholder: "Keterangan singkat...",
-                            },
-                        ].map((field) => (
-                            <div
-                                key={field.key}
-                                style={{ marginBottom: "16px" }}
-                            >
-                                <label
+                                <h3
                                     style={{
-                                        display: "block",
-                                        fontSize: "13px",
-                                        fontWeight: 600,
-                                        color: "#374151",
-                                        marginBottom: "6px",
+                                        fontSize: 18,
+                                        fontWeight: 900,
+                                        color: colors.textMain,
                                     }}
                                 >
-                                    {field.label}
-                                </label>
-                                {field.type === "select" ? (
+                                    Tambah Transaksi
+                                </h3>
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    style={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: 12,
+                                        border: "1px solid #e5e7eb",
+                                        background: "#fff",
+                                        cursor: "pointer",
+                                        color: "#64748b",
+                                    }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            {error && (
+                                <div
+                                    style={{
+                                        marginBottom: 14,
+                                        padding: 12,
+                                        background: "#fee2e2",
+                                        borderRadius: 12,
+                                        color: "#991b1b",
+                                        fontWeight: 700,
+                                    }}
+                                >
+                                    {error}
+                                </div>
+                            )}
+
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "1fr 1fr",
+                                    gap: 12,
+                                }}
+                            >
+                                <div style={{ gridColumn: "span 2" }}>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontSize: 13,
+                                            fontWeight: 800,
+                                            marginBottom: 6,
+                                            color: colors.textMain,
+                                        }}
+                                    >
+                                        Tipe
+                                    </label>
                                     <select
-                                        value={form[field.key]}
+                                        value={form.type}
                                         onChange={(e) =>
                                             setForm((f) => ({
                                                 ...f,
-                                                [field.key]: e.target.value,
+                                                type: e.target.value,
                                             }))
                                         }
                                         style={{
                                             width: "100%",
-                                            padding: "10px 14px",
-                                            border: "1.5px solid #e5e7eb",
-                                            borderRadius: "10px",
-                                            fontSize: "14px",
-                                            color: "#111827",
+                                            padding: "10px 12px",
+                                            borderRadius: 12,
+                                            border: "1px solid #e5e7eb",
                                             background: "#f9fafb",
-                                            fontFamily: "inherit",
-                                            cursor: "pointer",
+                                            fontWeight: 700,
+                                        }}
+                                    >
+                                        <option value="pemasukan">
+                                            Pemasukan
+                                        </option>
+                                        <option value="pengeluaran">
+                                            Pengeluaran
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontSize: 13,
+                                            fontWeight: 800,
+                                            marginBottom: 6,
+                                            color: colors.textMain,
+                                        }}
+                                    >
+                                        Kategori
+                                    </label>
+                                    <select
+                                        value={form.category_id}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                category_id: e.target.value,
+                                            }))
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px 12px",
+                                            borderRadius: 12,
+                                            border: "1px solid #e5e7eb",
+                                            background: "#f9fafb",
+                                            fontWeight: 700,
                                         }}
                                     >
                                         <option value="">
-                                            -- Pilih {field.label} --
+                                            -- Pilih Kategori --
                                         </option>
-                                        {field.options &&
-                                            field.options.map((o) => (
-                                                <option key={o.v} value={o.v}>
-                                                    {o.l}
-                                                </option>
-                                            ))}
+                                        {categories.map((c) => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name}
+                                            </option>
+                                        ))}
                                     </select>
-                                ) : (
-                                    <input
-                                        type={field.type}
-                                        placeholder={field.placeholder}
-                                        value={form[field.key]}
+                                </div>
+
+                                <div>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontSize: 13,
+                                            fontWeight: 800,
+                                            marginBottom: 6,
+                                            color: colors.textMain,
+                                        }}
+                                    >
+                                        Akun
+                                    </label>
+                                    <select
+                                        value={form.account_id}
                                         onChange={(e) =>
                                             setForm((f) => ({
                                                 ...f,
-                                                [field.key]: e.target.value,
+                                                account_id: e.target.value,
                                             }))
                                         }
                                         style={{
                                             width: "100%",
-                                            padding: "10px 14px",
-                                            border: "1.5px solid #e5e7eb",
-                                            borderRadius: "10px",
-                                            fontSize: "14px",
-                                            color: "#111827",
+                                            padding: "10px 12px",
+                                            borderRadius: 12,
+                                            border: "1px solid #e5e7eb",
                                             background: "#f9fafb",
-                                            fontFamily: "inherit",
+                                            fontWeight: 700,
+                                        }}
+                                    >
+                                        <option value="">
+                                            -- Pilih Akun --
+                                        </option>
+                                        {accounts.map((a) => (
+                                            <option key={a.id} value={a.id}>
+                                                {a.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontSize: 13,
+                                            fontWeight: 800,
+                                            marginBottom: 6,
+                                            color: colors.textMain,
+                                        }}
+                                    >
+                                        Tanggal
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={form.transaction_date}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                transaction_date:
+                                                    e.target.value,
+                                            }))
+                                        }
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px 12px",
+                                            borderRadius: 12,
+                                            border: "1px solid #e5e7eb",
+                                            background: "#f9fafb",
+                                            fontWeight: 700,
                                         }}
                                     />
-                                )}
-                            </div>
-                        ))}
+                                </div>
 
-                        <button
-                            onClick={handleAddTransaction}
-                            disabled={saving}
-                            style={{
-                                width: "100%",
-                                padding: "12px",
-                                background: saving ? "#6b7280" : "#111827",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "10px",
-                                fontSize: "15px",
-                                fontWeight: 700,
-                                cursor: saving ? "not-allowed" : "pointer",
-                                fontFamily: "inherit",
-                                marginTop: "8px",
-                                transition: "background 0.15s",
-                            }}
-                        >
-                            {saving ? "Menyimpan..." : "Simpan Transaksi"}
-                        </button>
+                                <div>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontSize: 13,
+                                            fontWeight: 800,
+                                            marginBottom: 6,
+                                            color: colors.textMain,
+                                        }}
+                                    >
+                                        Jumlah (Rp)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={form.amount}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                amount: e.target.value,
+                                            }))
+                                        }
+                                        placeholder="cth: 500000"
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px 12px",
+                                            borderRadius: 12,
+                                            border: "1px solid #e5e7eb",
+                                            background: "#f9fafb",
+                                            fontWeight: 700,
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ gridColumn: "span 2" }}>
+                                    <label
+                                        style={{
+                                            display: "block",
+                                            fontSize: 13,
+                                            fontWeight: 800,
+                                            marginBottom: 6,
+                                            color: colors.textMain,
+                                        }}
+                                    >
+                                        Deskripsi
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={form.description}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                description: e.target.value,
+                                            }))
+                                        }
+                                        placeholder="Keterangan singkat..."
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px 12px",
+                                            borderRadius: 12,
+                                            border: "1px solid #e5e7eb",
+                                            background: "#f9fafb",
+                                            fontWeight: 700,
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleAddTransaction}
+                                disabled={saving}
+                                style={{
+                                    width: "100%",
+                                    marginTop: 18,
+                                    padding: "12px 16px",
+                                    borderRadius: 14,
+                                    border: "none",
+                                    cursor: saving ? "not-allowed" : "pointer",
+                                    background: saving
+                                        ? "#94a3b8"
+                                        : colors.primary,
+                                    color: "#fff",
+                                    fontWeight: 900,
+                                    fontSize: 15,
+                                }}
+                            >
+                                {saving ? "Menyimpan..." : "Simpan"}
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </AppLayout>
     );
 }
+

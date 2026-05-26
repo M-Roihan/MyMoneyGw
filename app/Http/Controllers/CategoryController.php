@@ -9,11 +9,14 @@ use Illuminate\Support\Facades\Auth;
 class CategoryController extends Controller
 {
     /**
-     * Ambil semua kategori
+     * Ambil semua kategori (shared + custom user)
      */
     public function index()
     {
-        $categories = Category::where('user_id', Auth::id())->get();
+        // Ambil kategori shared (user_id = NULL) atau milik user sendiri
+        $categories = Category::where('user_id', null)
+            ->orWhere('user_id', Auth::id())
+            ->get();
 
         return response()->json([
             'success' => true,

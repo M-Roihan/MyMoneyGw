@@ -26,6 +26,7 @@ class RegisteredUserController extends Controller
         ]);
 
         // Simpan user dengan password yang sudah di-hash (Enkripsi)
+        // UserObserver akan otomatis membuat default categories
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,

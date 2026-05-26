@@ -26,7 +26,7 @@ export default function Transaksi() {
     const [saving, setSaving] = useState(false);
     
     const initialForm = {
-        type: 'pemasukan',
+        type: 'income',
         category_id: '',
         account_id: '',
         amount: '',
@@ -76,7 +76,7 @@ export default function Transaksi() {
     // Derived Data
     const filteredTransactions = useMemo(() => {
         return transactions.filter(tx => {
-            if (filterType !== 'Semua' && tx.type !== filterType) return false;
+            if (filterType !== 'Semua' && tx.type !== (filterType === 'pemasukan' ? 'income' : 'expense')) return false;
             if (filterCategory !== 'Semua' && String(tx.category_id) !== String(filterCategory)) return false;
             
             if (debouncedSearch) {
@@ -316,7 +316,7 @@ export default function Transaksi() {
                                     ) : (
                                         filteredTransactions.map((tx) => {
                                             const isIncome =
-                                                tx.type === "pemasukan";
+                                                tx.type === "income";
                                             return (
                                                 <tr
                                                     key={tx.id}
@@ -347,43 +347,32 @@ export default function Transaksi() {
                                                     <td className="px-6 py-4 text-sm text-slate-800">
                                                         {tx.description}
                                                     </td>
-                                                    <td
-                                                        className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${
-                                                            isIncome
-                                                                ? "text-emerald-600"
-                                                                : "text-rose-600"
-                                                        }`}
-                                                    >
-                                                        {isIncome ? "+" : "-"}
-                                                        {formatRupiah(
-                                                            tx.amount,
-                                                        )}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold">
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold text-sm ${
+                                                                isIncome
+                                                                    ? "bg-emerald-100 text-emerald-700 border-2 border-emerald-300"
+                                                                    : "bg-rose-100 text-rose-700 border-2 border-rose-300"
+                                                            }`}
+                                                        >
+                                                            <span className="text-lg font-bold">
+                                                                {isIncome ? "+" : "-"}
+                                                            </span>
+                                                            {formatRupiah(
+                                                                tx.amount,
+                                                            )}
+                                                        </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button
-                                                                onClick={() =>
-                                                                    handleOpenEdit(
-                                                                        tx,
-                                                                    )
-                                                                }
-                                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                                title="Edit"
-                                                            >
-                                                                ✏️
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    handleDeleteClick(
-                                                                        tx.id,
-                                                                    )
-                                                                }
-                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                                title="Hapus"
-                                                            >
-                                                                🗑️
-                                                            </button>
-                                                        </div>
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold text-xs ${
+                                                                isIncome
+                                                                    ? "bg-green-100 text-green-700"
+                                                                    : "bg-red-100 text-red-700"
+                                                            }`}
+                                                        >
+                                                            {isIncome ? "📥 Pemasukan" : "📤 Pengeluaran"}
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             );
@@ -433,10 +422,10 @@ export default function Transaksi() {
                                             }
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
                                         >
-                                            <option value="pemasukan">
+                                            <option value="income">
                                                 Pemasukan
                                             </option>
-                                            <option value="pengeluaran">
+                                            <option value="expense">
                                                 Pengeluaran
                                             </option>
                                         </select>

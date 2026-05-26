@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Account;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
 class TransactionController extends Controller
@@ -62,7 +63,13 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => [
+                'required',
+                Rule::exists('categories', 'id')->where(function ($query) {
+                    $query->where('user_id', Auth::id())
+                          ->orWhereNull('user_id');
+                }),
+            ],
             'account_id' => 'required|exists:accounts,id',
             'type' => 'required|in:pemasukan,pengeluaran',
             'amount' => 'required|numeric|min:0',
@@ -116,7 +123,13 @@ class TransactionController extends Controller
         }
 
         $validated = $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
+            'category_id' => [
+                'sometimes',
+                Rule::exists('categories', 'id')->where(function ($query) {
+                    $query->where('user_id', Auth::id())
+                          ->orWhereNull('user_id');
+                }),
+            ],
             'account_id' => 'sometimes|exists:accounts,id',
             'type' => 'sometimes|in:pemasukan,pengeluaran',
             'amount' => 'sometimes|numeric|min:0',

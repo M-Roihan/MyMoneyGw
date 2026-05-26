@@ -13,7 +13,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::where('user_id', Auth::id())->get();
+        $categories = Category::where('user_id', Auth::id())
+            ->orWhereNull('user_id')
+            ->get();
 
         return response()->json([
             'success' => true,

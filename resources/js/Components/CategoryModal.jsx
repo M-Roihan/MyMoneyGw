@@ -26,7 +26,7 @@ export default function CategoryModal({
 
     const initialForm = {
         name: "",
-        type: "pemasukan",
+        type: "income",
         color: "#3b82f6",
     };
     const [form, setForm] = useState(initialForm);
@@ -223,7 +223,7 @@ export default function CategoryModal({
                                                         </p>
                                                         <p className="text-xs text-slate-500">
                                                             {category.type ===
-                                                            "pemasukan"
+                                                            "income"
                                                                 ? "📥 Pemasukan"
                                                                 : "📤 Pengeluaran"}
                                                         </p>
@@ -232,26 +232,26 @@ export default function CategoryModal({
 
                                                 {/* Actions */}
                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() =>
-                                                            handleOpenEditForm(
-                                                                category,
-                                                            )
-                                                        }
-                                                        className="px-3 py-1.5 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleDeleteClick(
-                                                                category.id,
-                                                            )
-                                                        }
-                                                        className="px-3 py-1.5 text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                                                    >
-                                                        Hapus
-                                                    </button>
+                                                    {category.user_id !== null ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleOpenEditForm(category)}
+                                                                className="px-3 py-1.5 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteClick(category.id)}
+                                                                className="px-3 py-1.5 text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                                                            >
+                                                                Hapus
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 italic bg-slate-200/60 px-2.5 py-1 rounded-md align-middle self-center">
+                                                            Bawaan Sistem
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -300,10 +300,10 @@ export default function CategoryModal({
                                         }
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
                                     >
-                                        <option value="pemasukan">
+                                        <option value="income">
                                             Pemasukan
                                         </option>
-                                        <option value="pengeluaran">
+                                        <option value="expense">
                                             Pengeluaran
                                         </option>
                                     </select>

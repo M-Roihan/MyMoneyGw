@@ -94,7 +94,7 @@ export default function AboutUs() {
                                 Tim Kami
                             </h2>
                             <p className="text-slate-500 mt-2">
-                                Orang-orang hebat di balik FinanceKu
+                                Orang-orang di balik FinanceKu
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

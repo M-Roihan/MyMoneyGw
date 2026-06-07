@@ -3,7 +3,7 @@ import { useForm, Head, Link } from '@inertiajs/react';
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
-        email: '',
+        login: '',
         password: '',
         remember: false,
     });
@@ -16,7 +16,7 @@ export default function Login() {
     return (
         <div 
             className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat p-4 md:p-10"
-            style={{ backgroundImage: "url('/images/bg-hutao.jpg')" }}
+            style={{ backgroundImage: "url('/images/bg-finance.jpg')" }}
         >
             <Head title="Login FinanceKu" />
 
@@ -47,14 +47,14 @@ export default function Login() {
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div>
-                                <label className="block text-sm uppercase tracking-widest font-extrabold text-black mb-2 ml-1">Email Address</label>
+                                <label className="block text-sm uppercase tracking-widest font-extrabold text-black mb-2 ml-1">Email or Username</label>
                                 <input 
-                                    type="email" 
-                                    value={data.email} 
-                                    onChange={e => setData('email', e.target.value)} 
-                                    className={`w-full px-4 py-3 font-bold bg-black/10 border rounded-xl text-black focus:ring-2 focus:ring-blue-500 outline-none transition duration-200 ${errors.email ? 'border-red-500' : 'border-white/10'}`} 
+                                    type="text" 
+                                    value={data.login} 
+                                    onChange={e => setData('login', e.target.value)} 
+                                    className={`w-full px-4 py-3 font-bold bg-black/10 border rounded-xl text-black focus:ring-2 focus:ring-blue-500 outline-none transition duration-200 ${errors.login ? 'border-red-500' : 'border-white/10'}`} 
                                 />
-                                {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                                {errors.login && <p className="text-red-400 text-xs mt-1">{errors.login}</p>}
                             </div>
 
                             <div>

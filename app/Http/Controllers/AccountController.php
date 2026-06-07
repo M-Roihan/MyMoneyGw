@@ -13,9 +13,7 @@ class AccountController extends Controller
      */
     public function index()
     {
-        $accounts = Account::whereNull('user_id')
-            ->orWhere('user_id', Auth::id())
-            ->get();
+        $accounts = Account::where('user_id', Auth::id())->get();
 
         return response()->json([
             'success' => true,

@@ -54,6 +54,13 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
+        if ($category->user_id === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kategori tidak bisa diubah'
+            ], 403);
+        }
+
         if ($category->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
@@ -63,7 +70,7 @@ class CategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string',
-            'type' => 'sometimes|in:pemasukan,pengeluaran',
+            'type' => 'sometimes|in:income,expense',
             'color' => 'nullable|string',
         ]);
 
@@ -81,6 +88,13 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
+        if ($category->user_id === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kategori tidak bisa dihapus'
+            ], 403);
+        }
+
         if ($category->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,

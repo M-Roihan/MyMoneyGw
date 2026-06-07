@@ -9,15 +9,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-class RegisteredUserController extends Controller
-{
-    public function create()
-    {
+class RegisteredUserController extends Controller {
+    public function create() {
         return Inertia::render('Auth/Register');
     }
 
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         // Validasi input
         $request->validate([
             'name' => 'required|string|max:255',

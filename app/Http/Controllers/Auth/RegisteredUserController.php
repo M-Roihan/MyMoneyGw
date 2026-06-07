@@ -18,21 +18,21 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input (Poin Kompleksitas: Keamanan Data)
+        // Validasi input
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|confirmed|min:8',
+            'password' => 'required|string|confirmed|min:6',
         ]);
 
-        // Simpan user dengan password yang sudah di-hash (Enkripsi)
+        // Simpan data user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        // Redirect ke Dashboard (Modul 1.3.3)
+        // Redirect ke Login
         return redirect()->intended(route('login', absolute: false));
     }
 }

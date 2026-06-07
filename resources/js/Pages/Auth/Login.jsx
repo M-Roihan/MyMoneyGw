@@ -68,18 +68,15 @@ export default function Login() {
                                 {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
                             </div>
 
-                            <div className="flex items-center justify-between text-sm">
-                                <label className="flex items-center text-black font-bold cursor-pointer group">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={data.remember} 
-                                        onChange={e => setData('remember', e.target.checked)} 
-                                        className="mr-2 rounded border-black/50 bg-transparent text-blue-500 focus:ring-blue-500" 
-                                    />
-                                    <span className="group-hover:text-blue-500 transition">Ingat Saya</span>
-                                </label>
-                                <Link href="#" className="text-blue-600 hover:text-blue-300 transition font-medium">Lupa Password?</Link>
-                            </div>
+                            <label className="flex items-center text-sm text-black font-bold cursor-pointer group">
+                                <input 
+                                    type="checkbox" 
+                                    checked={data.remember} 
+                                    onChange={e => setData('remember', e.target.checked)} 
+                                    className="mr-2 rounded border-black/50 bg-transparent text-blue-500 focus:ring-blue-500" 
+                                />
+                                <span className="group-hover:text-blue-500 transition">Ingat Saya</span>
+                            </label>
 
                             <button 
                                 type="submit" 

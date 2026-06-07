@@ -50,7 +50,7 @@ export default function Register() {
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Input Nama */}
                             <div>
-                                <label className="block text-sm uppercase tracking-widest font-extrabold text-black mb-1.5 ml-1">Nama Lengkap</label>
+                                <label className="block text-sm uppercase tracking-widest font-extrabold text-black mb-1.5 ml-1">Username</label>
                                 <input 
                                     type="text" 
                                     value={data.name} 

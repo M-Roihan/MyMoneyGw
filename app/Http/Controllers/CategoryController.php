@@ -13,7 +13,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::where('user_id', Auth::id())->get();
+        $categories = Category::whereNull('user_id',)
+        ->orWhere('user_id', Auth::id())
+        ->get();
 
         return response()->json([
             'success' => true,
@@ -28,7 +30,7 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
-            'type' => 'required|in:pemasukan,pengeluaran',
+            'type' => 'required|in:income,expense',
             'color' => 'nullable|string',
         ]);
 

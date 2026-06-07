@@ -3,10 +3,10 @@ import AppLayout from '@/Layouts/AppLayout';
 
 export default function AboutUs() {
     const teamMembers = [
-        { name: "Alfi Adriansyah", nim: "2350081106", role: "Backend Developer", desc: "Bertanggung jawab pada arsitektur database dan API Laravel", color: "#2563eb" },
-        { name: "Rifky Aditya Kamil", nim: "2350081112", role: "Frontend Developer", desc: "Membangun antarmuka pengguna dengan React dan Tailwind CSS", color: "#10b981" },
-        { name: "Muhammad Roihan", nim: "2350081135", role: "Full Stack Developer", desc: "Mengintegrasikan frontend dan backend serta pengujian sistem", color: "#8b5cf6" },
-        { name: "Aditya Maulana A", nim: "2350081136", role: "UI/UX Designer", desc: "Merancang desain antarmuka dan pengalaman pengguna", color: "#f59e0b" },
+        { name: "Alfi Adriansyah", nim: "2350081106", color: "#2563eb" },
+        { name: "Rifky Aditya Kamil", nim: "2350081112", color: "#10b981" },
+        { name: "Muhammad Roihan", nim: "2350081135", color: "#8b5cf6" },
+        { name: "Aditya Maulana A", nim: "2350081136", color: "#f59e0b" },
     ];
 
     const techStack = [
@@ -30,7 +30,6 @@ export default function AboutUs() {
             `}</style>
 
             <div className="pb-12">
-                {/* SECTION 1 - Hero */}
                 <section className="bg-gradient-to-br from-slate-900 to-blue-900 text-white py-24 px-6 text-center rounded-b-[3rem] shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-300 via-transparent to-transparent"></div>
                     <div className="relative z-10 max-w-3xl mx-auto">
@@ -47,7 +46,6 @@ export default function AboutUs() {
                 </section>
 
                 <div className="max-w-6xl mx-auto px-6 -mt-12 relative z-20 space-y-12">
-                    {/* SECTION 2 - Visi & Misi */}
                     <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col justify-center">
                             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-2xl mb-6">
@@ -90,14 +88,13 @@ export default function AboutUs() {
                         </div>
                     </section>
 
-                    {/* SECTION 3 - Tim Pengembang */}
                     <section>
                         <div className="text-center mb-10">
                             <h2 className="text-3xl font-bold text-slate-900">
                                 Tim Kami
                             </h2>
                             <p className="text-slate-500 mt-2">
-                                Orang-orang hebat di balik berdirinya FinanceKu
+                                Orang-orang hebat di balik FinanceKu
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -149,7 +146,6 @@ export default function AboutUs() {
                         </div>
                     </section>
 
-                    {/* SECTION 4 - Tech Stack */}
                     <section className="bg-white rounded-3xl p-8 md:p-10 border border-slate-100 shadow-sm text-center">
                         <h2 className="text-2xl font-bold text-slate-900 mb-8">
                             Teknologi yang Digunakan

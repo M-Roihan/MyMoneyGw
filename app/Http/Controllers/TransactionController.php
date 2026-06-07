@@ -20,11 +20,11 @@ class TransactionController extends Controller
 
         // 1. Ambil Total Pemasukan & Pengeluaran dari Transaksi
         $pemasukan = Transaction::where('user_id', $userId)
-            ->where('type', 'pemasukan')
+            ->where('type', 'income')
             ->sum('amount');
 
         $pengeluaran = Transaction::where('user_id', $userId)
-            ->where('type', 'pengeluaran')
+            ->where('type', 'expense')
             ->sum('amount');
 
         // 2. Ambil Total Saldo asli dari akumulasi seluruh akun di DompetKu
@@ -64,18 +64,26 @@ class TransactionController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'account_id' => 'required|exists:accounts,id',
-            'type' => 'required|in:pemasukan,pengeluaran',
+            'type' => 'required|in:income,expense,pemasukan,pengeluaran',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'transaction_date' => 'required|date',
             'saving_id' => 'nullable|exists:savings,id',
         ]);
 
+        // Normalize type to income/expense
+        $type = $validated['type'];
+        if ($type === 'pemasukan') {
+            $type = 'income';
+        } elseif ($type === 'pengeluaran') {
+            $type = 'expense';
+        }
+
         $transaction = Transaction::create([
             'user_id' => Auth::id(),
             'category_id' => $validated['category_id'],
             'account_id' => $validated['account_id'],
-            'type' => $validated['type'],
+            'type' => $type,
             'amount' => $validated['amount'],
             'description' => $validated['description'],
             'transaction_date' => $validated['transaction_date'],
@@ -118,12 +126,21 @@ class TransactionController extends Controller
         $validated = $request->validate([
             'category_id' => 'sometimes|exists:categories,id',
             'account_id' => 'sometimes|exists:accounts,id',
-            'type' => 'sometimes|in:pemasukan,pengeluaran',
+            'type' => 'sometimes|in:income,expense,pemasukan,pengeluaran',
             'amount' => 'sometimes|numeric|min:0',
             'description' => 'nullable|string',
             'transaction_date' => 'sometimes|date',
             'saving_id' => 'nullable|exists:savings,id',
         ]);
+
+        // Normalize type if provided
+        if (isset($validated['type'])) {
+            if ($validated['type'] === 'pemasukan') {
+                $validated['type'] = 'income';
+            } elseif ($validated['type'] === 'pengeluaran') {
+                $validated['type'] = 'expense';
+            }
+        }
 
         $transaction->update($validated);
 
@@ -199,20 +216,20 @@ class TransactionController extends Controller
         }
 
         // 1. Pemasukan & Pengeluaran (Keseluruhan dari transaksi)
-        $totalPemasukan = Transaction::where('user_id', $userId)->where('type', 'pemasukan')->sum('amount');
-        $totalPengeluaran = Transaction::where('user_id', $userId)->where('type', 'pengeluaran')->sum('amount');
+        $totalPemasukan = Transaction::where('user_id', $userId)->where('type', 'income')->sum('amount');
+        $totalPengeluaran = Transaction::where('user_id', $userId)->where('type', 'expense')->sum('amount');
         
         // Saldo Total: Gabungan saldo real dari semua Akun
         $saldoTotal = Account::where('user_id', $userId)->sum('balance');
 
         // 2. Bulan Ini / Sesuai Filter
         $pemasukanBulanIni = Transaction::where('user_id', $userId)
-            ->where('type', 'pemasukan')
+            ->where('type', 'income')
             ->whereBetween('transaction_date', [$startDate, $endDate])
             ->sum('amount');
 
         $pengeluaranBulanIni = Transaction::where('user_id', $userId)
-            ->where('type', 'pengeluaran')
+            ->where('type', 'expense')
             ->whereBetween('transaction_date', [$startDate, $endDate])
             ->sum('amount');
 
@@ -226,7 +243,7 @@ class TransactionController extends Controller
 
         // 4. Pengeluaran per Kategori (Sesuai Filter)
         $pengeluaranPerKategoriRaw = Transaction::where('user_id', $userId)
-            ->where('type', 'pengeluaran')
+            ->where('type', 'expense')
             ->whereBetween('transaction_date', [$startDate, $endDate])
             ->selectRaw('category_id, sum(amount) as total')
             ->groupBy('category_id')
@@ -250,13 +267,13 @@ class TransactionController extends Controller
             $bulanStr = $monthDate->translatedFormat('M Y');
 
             $in = Transaction::where('user_id', $userId)
-                ->where('type', 'pemasukan')
+                ->where('type', 'income')
                 ->whereMonth('transaction_date', $monthDate->month)
                 ->whereYear('transaction_date', $monthDate->year)
                 ->sum('amount');
             
             $out = Transaction::where('user_id', $userId)
-                ->where('type', 'pengeluaran')
+                ->where('type', 'expense')
                 ->whereMonth('transaction_date', $monthDate->month)
                 ->whereYear('transaction_date', $monthDate->year)
                 ->sum('amount');

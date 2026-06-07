@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Transaction;
 use App\Models\Account;
+use Illuminate\Support\Facades\DB;
 
 class TransactionObserver
 {
@@ -51,38 +52,43 @@ class TransactionObserver
     }
 
     /**
-     * Update saldo akun. Jika pemasukan bertambah, jika pengeluaran berkurang.
+     * Update saldo akun menggunakan raw query untuk menghindari casting issues
      */
     private function updateAccountBalance($accountId, $amount, $type): void
     {
         if (!$accountId) return;
 
-        $account = Account::find($accountId);
-        if ($account) {
-            if ($type === 'pemasukan') {
-                $account->balance += $amount;
-            } else if ($type === 'pengeluaran') {
-                $account->balance -= $amount;
-            }
-            $account->save();
+        if ($type === 'income' || $type === 'pemasukan') {
+            // Pemasukan: tambah balance
+            DB::table('accounts')
+                ->where('id', $accountId)
+                ->increment('balance', $amount);
+        } else if ($type === 'expense' || $type === 'pengeluaran') {
+            // Pengeluaran: kurangi balance
+            DB::table('accounts')
+                ->where('id', $accountId)
+                ->decrement('balance', $amount);
         }
     }
 
     /**
-     * Revert efek transaksi pada saldo akun.
+     * Revert efek transaksi pada saldo akun menggunakan raw query
      */
     private function revertAccountBalance($accountId, $amount, $type): void
     {
         if (!$accountId) return;
 
-        $account = Account::find($accountId);
-        if ($account) {
-            if ($type === 'pemasukan') {
-                $account->balance -= $amount;
-            } else if ($type === 'pengeluaran') {
-                $account->balance += $amount;
-            }
-            $account->save();
+        if ($type === 'income' || $type === 'pemasukan') {
+            // Balik pemasukan: kurangi balance
+            DB::table('accounts')
+                ->where('id', $accountId)
+                ->decrement('balance', $amount);
+        } else if ($type === 'expense' || $type === 'pengeluaran') {
+            // Balik pengeluaran: tambah balance
+            DB::table('accounts')
+                ->where('id', $accountId)
+                ->increment('balance', $amount);
         }
     }
 }
+

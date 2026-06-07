@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import AppLayout from '@/Layouts/AppLayout';
-import Toast from '../Components/Toast';
-import ConfirmDialog from '../Components/ConfirmDialog';
-import { formatRupiah, formatDate } from '@/utils/format';
-import { apiFetch } from '@/utils/api';
+import React, { useState, useEffect, useMemo } from "react";
+import AppLayout from "@/Layouts/AppLayout";
+import Toast from "../Components/Toast";
+import ConfirmDialog from "../Components/ConfirmDialog";
+import CategoryModal from "../Components/CategoryModal";
+import { formatRupiah, formatDate } from "@/utils/format";
+import { apiFetch } from "@/utils/api";
 
 export default function Transaksi() {
     const [transactions, setTransactions] = useState([]);
@@ -11,27 +12,33 @@ export default function Transaksi() {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
-    
+    const [toast, setToast] = useState({
+        show: false,
+        message: "",
+        type: "info",
+    });
+
     // Filters
-    const [filterType, setFilterType] = useState('Semua');
-    const [filterCategory, setFilterCategory] = useState('Semua');
-    const [searchInput, setSearchInput] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [filterType, setFilterType] = useState("Semua");
+    const [filterCategory, setFilterCategory] = useState("Semua");
+    const [searchInput, setSearchInput] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
 
     // Modal Form
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [saving, setSaving] = useState(false);
-    
+    // Category Modal
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+
     const initialForm = {
-        type: 'pemasukan',
-        category_id: '',
-        account_id: '',
-        amount: '',
-        description: '',
-        transaction_date: new Date().toISOString().split('T')[0],
+        type: "income",
+        category_id: "",
+        account_id: "",
+        amount: "",
+        description: "",
+        transaction_date: new Date().toISOString().split("T")[0],
     };
     const [form, setForm] = useState(initialForm);
 
@@ -39,7 +46,7 @@ export default function Transaksi() {
     const [showConfirm, setShowConfirm] = useState(false);
     const [confirmId, setConfirmId] = useState(null);
 
-    const showToast = (message, type = 'info') => {
+    const showToast = (message, type = "info") => {
         setToast({ show: true, message, type });
     };
 
@@ -47,17 +54,17 @@ export default function Transaksi() {
         setLoading(true);
         try {
             const [txJson, catJson, accJson] = await Promise.all([
-                apiFetch('/api/transactions'),
-                apiFetch('/api/categories'),
-                apiFetch('/api/accounts')
+                apiFetch("/api/transactions"),
+                apiFetch("/api/categories"),
+                apiFetch("/api/accounts"),
             ]);
-            
+
             if (txJson) setTransactions(txJson.data || []);
             if (catJson) setCategories(catJson.data || []);
             if (accJson) setAccounts(accJson.data || []);
         } catch (error) {
             console.error(error);
-            showToast('Gagal memuat data', 'error');
+            showToast("Gagal memuat data", "error");
         } finally {
             setLoading(false);
         }
@@ -75,10 +82,18 @@ export default function Transaksi() {
 
     // Derived Data
     const filteredTransactions = useMemo(() => {
-        return transactions.filter(tx => {
-            if (filterType !== 'Semua' && tx.type !== filterType) return false;
-            if (filterCategory !== 'Semua' && String(tx.category_id) !== String(filterCategory)) return false;
-            
+        return transactions.filter((tx) => {
+            if (
+                filterType !== "Semua" &&
+                tx.type !== (filterType === "pemasukan" ? "income" : "expense")
+            )
+                return false;
+            if (
+                filterCategory !== "Semua" &&
+                String(tx.category_id) !== String(filterCategory)
+            )
+                return false;
+
             if (debouncedSearch) {
                 const searchLower = debouncedSearch.toLowerCase();
                 if (!tx.description?.toLowerCase().includes(searchLower)) {
@@ -100,10 +115,10 @@ export default function Transaksi() {
     const handleOpenEdit = (tx) => {
         setForm({
             type: tx.type,
-            category_id: tx.category_id || '',
-            account_id: tx.account_id || '',
+            category_id: tx.category_id || "",
+            account_id: tx.account_id || "",
             amount: tx.amount,
-            description: tx.description || '',
+            description: tx.description || "",
             transaction_date: tx.transaction_date,
         });
         setIsEditing(true);
@@ -119,12 +134,12 @@ export default function Transaksi() {
     const handleConfirmDelete = async () => {
         try {
             await apiFetch(`/api/transactions/${confirmId}`, {
-                method: 'DELETE'
+                method: "DELETE",
             });
-            showToast('Transaksi berhasil dihapus', 'success');
+            showToast("Transaksi berhasil dihapus", "success");
             fetchAll();
         } catch (e) {
-            showToast(e.message, 'error');
+            showToast(e.message, "error");
         } finally {
             setShowConfirm(false);
             setConfirmId(null);
@@ -135,20 +150,27 @@ export default function Transaksi() {
         e.preventDefault();
         setSaving(true);
 
-        const url = isEditing ? `/api/transactions/${editingId}` : '/api/transactions';
-        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing
+            ? `/api/transactions/${editingId}`
+            : "/api/transactions";
+        const method = isEditing ? "PUT" : "POST";
 
         try {
             await apiFetch(url, {
                 method,
-                body: JSON.stringify(form)
+                body: JSON.stringify(form),
             });
 
-            showToast(isEditing ? 'Transaksi berhasil diupdate' : 'Transaksi berhasil ditambahkan', 'success');
+            showToast(
+                isEditing
+                    ? "Transaksi berhasil diupdate"
+                    : "Transaksi berhasil ditambahkan",
+                "success",
+            );
             setShowModal(false);
             fetchAll();
         } catch (error) {
-            showToast(error.message, 'error');
+            showToast(error.message, "error");
         } finally {
             setSaving(false);
         }
@@ -194,13 +216,29 @@ export default function Transaksi() {
                                 Kelola semua pemasukan dan pengeluaran Anda.
                             </p>
                         </div>
-                        <button
-                            onClick={handleOpenAdd}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors flex items-center gap-2 text-sm"
-                        >
-                            <span>+</span> Tambah Transaksi
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowCategoryModal(true)}
+                                className="bg-slate-600 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors flex items-center gap-2 text-sm"
+                            >
+                                <span>📁</span> Kelola Kategori
+                            </button>
+                            <button
+                                onClick={handleOpenAdd}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors flex items-center gap-2 text-sm"
+                            >
+                                <span>+</span> Tambah Transaksi
+                            </button>
+                        </div>
                     </header>
+
+                    {/* Category Modal */}
+                    <CategoryModal
+                        isOpen={showCategoryModal}
+                        onClose={() => setShowCategoryModal(false)}
+                        categories={categories}
+                        onCategoryChange={(newCats) => setCategories(newCats)}
+                    />
 
                     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                         {/* Filters */}
@@ -316,7 +354,7 @@ export default function Transaksi() {
                                     ) : (
                                         filteredTransactions.map((tx) => {
                                             const isIncome =
-                                                tx.type === "pemasukan";
+                                                tx.type === "income";
                                             return (
                                                 <tr
                                                     key={tx.id}
@@ -347,41 +385,47 @@ export default function Transaksi() {
                                                     <td className="px-6 py-4 text-sm text-slate-800">
                                                         {tx.description}
                                                     </td>
-                                                    <td
-                                                        className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${
-                                                            isIncome
-                                                                ? "text-emerald-600"
-                                                                : "text-rose-600"
-                                                        }`}
-                                                    >
-                                                        {isIncome ? "+" : "-"}
-                                                        {formatRupiah(
-                                                            tx.amount,
-                                                        )}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold">
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-bold text-sm ${
+                                                                isIncome
+                                                                    ? "bg-emerald-100 text-emerald-700 border-2 border-emerald-300"
+                                                                    : "bg-rose-100 text-rose-700 border-2 border-rose-300"
+                                                            }`}
+                                                        >
+                                                            <span className="text-lg font-bold">
+                                                                {isIncome
+                                                                    ? "+"
+                                                                    : "-"}
+                                                            </span>
+                                                            {formatRupiah(
+                                                                tx.amount,
+                                                            )}
+                                                        </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex items-center justify-center gap-2">
                                                             <button
+                                                                type="button"
                                                                 onClick={() =>
                                                                     handleOpenEdit(
                                                                         tx,
                                                                     )
                                                                 }
-                                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                                title="Edit"
+                                                                className="px-3 py-1.5 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                                                             >
-                                                                ✏️
+                                                                Edit
                                                             </button>
                                                             <button
+                                                                type="button"
                                                                 onClick={() =>
                                                                     handleDeleteClick(
                                                                         tx.id,
                                                                     )
                                                                 }
-                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                                title="Hapus"
+                                                                className="px-3 py-1.5 text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                                                             >
-                                                                🗑️
+                                                                Hapus
                                                             </button>
                                                         </div>
                                                     </td>
@@ -433,10 +477,10 @@ export default function Transaksi() {
                                             }
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
                                         >
-                                            <option value="pemasukan">
+                                            <option value="income">
                                                 Pemasukan
                                             </option>
-                                            <option value="pengeluaran">
+                                            <option value="expense">
                                                 Pengeluaran
                                             </option>
                                         </select>

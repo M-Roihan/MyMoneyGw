@@ -60,7 +60,7 @@ export default function DashboardPremium() {
     // Form tambah transaksi
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
-        type: "pemasukan",
+        type: "income",
         category_id: "",
         account_id: "",
         amount: "",
@@ -216,7 +216,7 @@ export default function DashboardPremium() {
 
             setShowModal(false);
             setForm({
-                type: "pemasukan",
+                type: "income",
                 category_id: "",
                 account_id: "",
                 amount: "",
@@ -597,7 +597,7 @@ export default function DashboardPremium() {
                                                 : "Default";
                                         const cs = categoryStyle[styleKey];
                                         const isIncome =
-                                            tx.type === "pemasukan";
+                                            tx.type === "income";
 
                                         return (
                                             <div
@@ -1004,10 +1004,10 @@ export default function DashboardPremium() {
                                             fontWeight: 700,
                                         }}
                                     >
-                                        <option value="pemasukan">
+                                        <option value="income">
                                             Pemasukan
                                         </option>
-                                        <option value="pengeluaran">
+                                        <option value="expense">
                                             Pengeluaran
                                         </option>
                                     </select>

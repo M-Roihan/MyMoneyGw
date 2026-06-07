@@ -14,6 +14,10 @@ class Account extends Model
 
     protected $fillable = ['user_id', 'name', 'type', 'balance'];
 
+    protected $casts = [
+        'balance' => 'decimal:2',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

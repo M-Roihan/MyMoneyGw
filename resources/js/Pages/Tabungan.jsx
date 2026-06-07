@@ -7,6 +7,7 @@ import { apiFetch } from '@/utils/api';
 
 export default function Tabungan() {
     const [savings, setSavings] = useState([]);
+    const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
@@ -20,6 +21,7 @@ export default function Tabungan() {
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [depositId, setDepositId] = useState(null);
     const [depositAmount, setDepositAmount] = useState('');
+    const [depositAccountId, setDepositAccountId] = useState('');
     const [depositSavingInfo, setDepositSavingInfo] = useState(null);
 
     // Confirm Dialog
@@ -37,23 +39,25 @@ export default function Tabungan() {
         setToast({ show: true, message, type });
     };
 
-    const fetchSavings = async () => {
+    const fetchSavingsAndAccounts = async () => {
         setLoading(true);
         try {
-            const json = await apiFetch('/api/savings');
-            if (json) {
-                setSavings(json.data || []);
-            }
+            const [savRes, accRes] = await Promise.all([
+                apiFetch('/api/savings'),
+                apiFetch('/api/accounts')
+            ]);
+            if (savRes) setSavings(savRes.data || []);
+            if (accRes) setAccounts(accRes.data || []);
         } catch (error) {
             console.error(error);
-            showToast('Gagal memuat data tabungan', 'error');
+            showToast('Gagal memuat data', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchSavings();
+        fetchSavingsAndAccounts();
     }, []);
 
     // Handlers
@@ -79,6 +83,11 @@ export default function Tabungan() {
         setDepositId(sav.id);
         setDepositSavingInfo(sav);
         setDepositAmount('');
+        if (accounts.length > 0) {
+            setDepositAccountId(accounts[0].id);
+        } else {
+            setDepositAccountId('');
+        }
         setShowDepositModal(true);
     };
 
@@ -93,7 +102,7 @@ export default function Tabungan() {
                 method: 'DELETE'
             });
             showToast('Tabungan berhasil dihapus', 'success');
-            fetchSavings();
+            fetchSavingsAndAccounts();
         } catch (e) {
             showToast(e.message, 'error');
         } finally {
@@ -117,7 +126,7 @@ export default function Tabungan() {
 
             showToast(isEditing ? 'Tabungan berhasil diupdate' : 'Tabungan berhasil dibuat', 'success');
             setShowFormModal(false);
-            fetchSavings();
+            fetchSavingsAndAccounts();
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
@@ -129,15 +138,21 @@ export default function Tabungan() {
         e.preventDefault();
         setSaving(true);
 
+        if (!depositAccountId) {
+            showToast('Pilih dompet terlebih dahulu', 'error');
+            setSaving(false);
+            return;
+        }
+
         try {
             await apiFetch(`/api/savings/${depositId}/deposit`, {
                 method: 'POST',
-                body: JSON.stringify({ amount: depositAmount })
+                body: JSON.stringify({ amount: depositAmount, account_id: depositAccountId })
             });
 
             showToast('Setoran berhasil ditambahkan', 'success');
             setShowDepositModal(false);
-            fetchSavings();
+            fetchSavingsAndAccounts();
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
@@ -462,6 +477,25 @@ export default function Tabungan() {
                                 onSubmit={handleSubmitDeposit}
                                 className="flex flex-col gap-5"
                             >
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                                        Sumber Dana (Dompet)
+                                    </label>
+                                    <select
+                                        required
+                                        value={depositAccountId}
+                                        onChange={(e) => setDepositAccountId(e.target.value)}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"
+                                    >
+                                        <option value="" disabled>Pilih Dompet</option>
+                                        {accounts.map(acc => (
+                                            <option key={acc.id} value={acc.id}>
+                                                {acc.name} - Sisa Saldo: {formatRupiah(acc.balance)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-1.5">
                                         Jumlah Setoran (Rp)

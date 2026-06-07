@@ -108,12 +108,33 @@ class SavingController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
+            'account_id' => 'required|exists:accounts,id',
         ]);
 
-        $newAmount = $saving->current_amount + $validated['amount'];
+        $account = \App\Models\Account::where('id', $validated['account_id'])
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$account) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dompet tidak valid'
+            ], 400);
+        }
+
+        if ($account->balance < $validated['amount']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Saldo dompet tidak mencukupi untuk setoran ini'
+            ], 400);
+        }
+
+        $actualAmount = $validated['amount'];
+        $newAmount = $saving->current_amount + $actualAmount;
 
         // Pastikan current_amount tidak melebihi target_amount
         if ($newAmount > $saving->target_amount) {
+            $actualAmount = $saving->target_amount - $saving->current_amount;
             $newAmount = $saving->target_amount;
         }
 
@@ -121,10 +142,28 @@ class SavingController extends Controller
             'current_amount' => $newAmount
         ]);
 
+        // Buat kategori "Tabungan" jika belum ada
+        $category = \App\Models\Category::firstOrCreate(
+            ['name' => 'Tabungan', 'user_id' => Auth::id()],
+            ['type' => 'expense', 'color' => '#10b981']
+        );
+
+        // Record transaksi expense, ini akan otomatis memotong saldo dompet via TransactionObserver
+        \App\Models\Transaction::create([
+            'user_id' => Auth::id(),
+            'category_id' => $category->id,
+            'account_id' => $account->id,
+            'type' => 'expense',
+            'amount' => $actualAmount,
+            'description' => 'Setor ke tabungan: ' . $saving->name,
+            'transaction_date' => now(),
+            'saving_id' => $saving->id,
+        ]);
+
         return response()->json([
             'success' => true,
             'data' => $saving,
-            'message' => 'Setoran berhasil ditambahkan'
+            'message' => 'Setoran berhasil ditambahkan dari dompet'
         ]);
     }
 }

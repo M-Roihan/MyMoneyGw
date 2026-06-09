@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Admin FinanceKu',
             'email' => 'admin@financeku.com',
-            'password' => Hash::make('password'), 
+            'password' => Hash::make('password'),
         ]);
 
         // 2. Panggil Seeder Lainnya

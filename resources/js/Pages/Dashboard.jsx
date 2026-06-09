@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePage, Link } from "@inertiajs/react";
 import AppLayout from "@/Layouts/AppLayout";
 import Toast from "../Components/Toast";
-import { formatRupiah, getGreeting } from "@/utils/format";
+import { formatRupiah, getGreeting, formatNumberInput } from "@/utils/format";
 import { apiFetch } from "@/utils/api";
 // --- KONFIGURASI WARNA PREMIUM ---
 const colors = {
@@ -1139,13 +1139,12 @@ export default function DashboardPremium() {
                                         Jumlah (Rp)
                                     </label>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        value={form.amount}
+                                        type="text"
+                                        value={formatNumberInput(form.amount)}
                                         onChange={(e) =>
                                             setForm((f) => ({
                                                 ...f,
-                                                amount: e.target.value,
+                                                amount: e.target.value.replace(/\D/g, ""),
                                             }))
                                         }
                                         placeholder="cth: 500000"

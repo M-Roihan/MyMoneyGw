@@ -5,6 +5,13 @@ export function formatRupiah(value) {
     return `Rp ${Math.round(value).toLocaleString('id-ID')}`;
 }
 
+export function formatNumberInput(value) {
+    if (!value) return "";
+    const stringValue = value.toString();
+    const numberString = stringValue.replace(/\D/g, "");
+    return numberString.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
 export function formatDate(dateStr, options = { day: '2-digit', month: 'short', year: 'numeric' }) {
     if (!dateStr) return "-";
     try {

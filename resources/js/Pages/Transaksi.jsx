@@ -3,7 +3,7 @@ import AppLayout from "@/Layouts/AppLayout";
 import Toast from "../Components/Toast";
 import ConfirmDialog from "../Components/ConfirmDialog";
 import CategoryModal from "../Components/CategoryModal";
-import { formatRupiah, formatDate } from "@/utils/format";
+import { formatRupiah, formatDate, formatNumberInput } from "@/utils/format";
 import { apiFetch } from "@/utils/api";
 
 export default function Transaksi() {
@@ -562,14 +562,13 @@ export default function Transaksi() {
                                             Jumlah (Rp)
                                         </label>
                                         <input
-                                            type="number"
-                                            min="0"
+                                            type="text"
                                             required
-                                            value={form.amount}
+                                            value={formatNumberInput(form.amount)}
                                             onChange={(e) =>
                                                 setForm({
                                                     ...form,
-                                                    amount: e.target.value,
+                                                    amount: e.target.value.replace(/\D/g, ""),
                                                 })
                                             }
                                             placeholder="0"

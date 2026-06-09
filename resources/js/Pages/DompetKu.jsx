@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import Toast from '../Components/Toast';
 import ConfirmDialog from '../Components/ConfirmDialog';
-import { formatRupiah } from '@/utils/format';
+import { formatRupiah, formatNumberInput } from '@/utils/format';
 import { apiFetch } from '@/utils/api';
 
 export default function DompetKu() {
@@ -338,13 +338,12 @@ export default function DompetKu() {
                                         Saldo Awal (Rp)
                                     </label>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        value={form.balance}
+                                        type="text"
+                                        value={formatNumberInput(form.balance)}
                                         onChange={(e) =>
                                             setForm({
                                                 ...form,
-                                                balance: e.target.value,
+                                                balance: e.target.value.replace(/\D/g, ""),
                                             })
                                         }
                                         placeholder="0"

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import Toast from '../Components/Toast';
 import ConfirmDialog from '../Components/ConfirmDialog';
-import { formatRupiah, formatDate } from '@/utils/format';
+import { formatRupiah, formatDate, formatNumberInput } from '@/utils/format';
 import { apiFetch } from '@/utils/api';
 
 export default function Tabungan() {
@@ -386,14 +386,13 @@ export default function Tabungan() {
                                         Target Jumlah (Rp)
                                     </label>
                                     <input
-                                        type="number"
-                                        min="1"
+                                        type="text"
                                         required
-                                        value={form.target_amount}
+                                        value={formatNumberInput(form.target_amount)}
                                         onChange={(e) =>
                                             setForm({
                                                 ...form,
-                                                target_amount: e.target.value,
+                                                target_amount: e.target.value.replace(/\D/g, ""),
                                             })
                                         }
                                         placeholder="Contoh: 15000000"
@@ -501,16 +500,11 @@ export default function Tabungan() {
                                         Jumlah Setoran (Rp)
                                     </label>
                                     <input
-                                        type="number"
-                                        min="1"
-                                        max={
-                                            depositSavingInfo.target_amount -
-                                            depositSavingInfo.current_amount
-                                        }
+                                        type="text"
                                         required
-                                        value={depositAmount}
+                                        value={formatNumberInput(depositAmount)}
                                         onChange={(e) =>
-                                            setDepositAmount(e.target.value)
+                                            setDepositAmount(e.target.value.replace(/\D/g, ""))
                                         }
                                         placeholder="0"
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 font-medium text-slate-700"

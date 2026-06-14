@@ -52,6 +52,9 @@ export default function DashboardPremium() {
     const { auth } = usePage().props;
     const user = auth.user;
 
+    // User profile dengan foto
+    const [userProfile, setUserProfile] = useState(null);
+
     // Saldo real-time (polling)
     const [saldo, setSaldo] = useState(null);
     const [saldoError, setSaldoError] = useState(null);
@@ -71,6 +74,22 @@ export default function DashboardPremium() {
 
     // Header search (sementara hanya untuk transaksi yang render)
     const [search, setSearch] = useState("");
+
+    // Fetch user profile
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const response = await apiFetch("/api/profile");
+                if (response.success) {
+                    setUserProfile(response.data);
+                }
+            } catch (err) {
+                console.error("Gagal mengambil profil pengguna:", err.message);
+            }
+        };
+
+        fetchUserProfile();
+    }, []);
 
     useEffect(() => {
         const fetchSaldo = async () => {
@@ -339,8 +358,40 @@ export default function DashboardPremium() {
                                         "linear-gradient(45deg, #cbd5e1, #94a3b8)",
                                     border: "2px solid #fff",
                                     boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    position: "relative",
                                 }}
-                            ></div>
+                            >
+                                {userProfile?.photo_profile ? (
+                                    <img
+                                        src={userProfile.photo_profile}
+                                        alt={user.name}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : (
+                                    <span
+                                        style={{
+                                            fontSize: "18px",
+                                            fontWeight: 700,
+                                            color: "#fff",
+                                        }}
+                                    >
+                                        {user.name
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")
+                                            .toUpperCase()
+                                            .slice(0, 2)}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </header>

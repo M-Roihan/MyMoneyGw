@@ -1,142 +1,179 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { Transition } from '@headlessui/react';
-import { useForm } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useState } from 'react';
+import { apiFetch } from '@/utils/api';
 
-export default function UpdatePasswordForm({ className = '' }) {
-    const passwordInput = useRef();
-    const currentPasswordInput = useRef();
+export default function UpdatePasswordForm({ onProfileUpdated }) {
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [success, setSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
 
-    const {
-        data,
-        setData,
-        errors,
-        put,
-        reset,
-        processing,
-        recentlySuccessful,
-    } = useForm({
-        current_password: '',
-        password: '',
-        password_confirmation: '',
-    });
-
-    const updatePassword = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setErrors({});
+        setSuccess(false);
 
-        put(route('password.update'), {
-            preserveScroll: true,
-            onSuccess: () => reset(),
-            onError: (errors) => {
-                if (errors.password) {
-                    reset('password', 'password_confirmation');
-                    passwordInput.current.focus();
-                }
+        try {
+            const response = await apiFetch('/api/profile/password', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    password,
+                    password_confirmation: passwordConfirmation,
+                }),
+            });
 
-                if (errors.current_password) {
-                    reset('current_password');
-                    currentPasswordInput.current.focus();
-                }
-            },
-        });
+            if (response.success) {
+                setSuccess(true);
+                setSuccessMessage(response.message);
+                setCurrentPassword('');
+                setPassword('');
+                setPasswordConfirmation('');
+                setTimeout(() => {
+                    setSuccess(false);
+                    if (onProfileUpdated) {
+                        onProfileUpdated();
+                    }
+                }, 2000);
+            }
+        } catch (error) {
+            if (error.response?.data?.errors) {
+                const validationErrors = Object.values(error.response.data.errors).flat();
+                setErrors({ validation: validationErrors });
+            } else if (error.errors) {
+                const validationErrors = Object.values(error.errors).flat();
+                setErrors({ validation: validationErrors });
+            } else {
+                setErrors({ general: error.message || 'Terjadi kesalahan pada server.' });
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Update Password
-                </h2>
+        <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Ubah Password</h3>
+                <p className="text-sm text-slate-600 mt-1">Gunakan kombinasi huruf dan angka untuk keamanan yang lebih baik</p>
+            </div>
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Ensure your account is using a long, random password to stay
-                    secure.
-                </p>
-            </header>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {errors.general && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        {errors.general}
+                    </div>
+                )}
 
-            <form onSubmit={updatePassword} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel
-                        htmlFor="current_password"
-                        value="Current Password"
-                    />
+                {errors.validation && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        <p className="font-semibold mb-1">Gagal memperbarui password:</p>
+                        <ul className="list-disc list-inside space-y-0.5">
+                            {errors.validation.map((pesan, index) => (
+                                <li key={index}>{pesan}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
-                    <TextInput
-                        id="current_password"
-                        ref={currentPasswordInput}
-                        value={data.current_password}
-                        onChange={(e) =>
-                            setData('current_password', e.target.value)
-                        }
-                        type="password"
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                    />
-
-                    <InputError
-                        message={errors.current_password}
-                        className="mt-2"
-                    />
-                </div>
+                {success && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                        {successMessage}
+                    </div>
+                )}
 
                 <div>
-                    <InputLabel htmlFor="password" value="New Password" />
-
-                    <TextInput
-                        id="password"
-                        ref={passwordInput}
-                        value={data.password}
-                        onChange={(e) => setData('password', e.target.value)}
-                        type="password"
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
+                    <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-700 mb-2">
+                        Password Saat Ini
+                    </label>
+                    <div className="relative">
+                        <input
+                            id="currentPassword"
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="Masukkan password saat ini"
+                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            required
+                            disabled={loading}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                            {showCurrentPassword ? '👁️' : '👁️‍🗨️'}
+                        </button>
+                    </div>
                 </div>
 
                 <div>
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        value={data.password_confirmation}
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        type="password"
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
-                    />
+                    <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+                        Password Baru
+                    </label>
+                    <div className="relative">
+                        <input
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Masukkan password baru"
+                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            required
+                            disabled={loading}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                            {showPassword ? '👁️' : '👁️‍🗨️'}
+                        </button>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-2">
+                        Password harus minimal 6 karakter, hanya mengandung huruf dan angka (tidak boleh ada spasi atau simbol)
+                    </p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
-
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-gray-600">
-                            Saved.
-                        </p>
-                    </Transition>
+                <div>
+                    <label htmlFor="passwordConfirmation" className="block text-sm font-medium text-slate-700 mb-2">
+                        Konfirmasi Password
+                    </label>
+                    <div className="relative">
+                        <input
+                            id="passwordConfirmation"
+                            type={showPasswordConfirmation ? 'text' : 'password'}
+                            value={passwordConfirmation}
+                            onChange={(e) => setPasswordConfirmation(e.target.value)}
+                            placeholder="Konfirmasi password baru"
+                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            required
+                            disabled={loading}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                            {showPasswordConfirmation ? '👁️' : '👁️‍🗨️'}
+                        </button>
+                    </div>
                 </div>
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+                >
+                    {loading ? 'Menyimpan...' : 'Ubah Password'}
+                </button>
             </form>
-        </section>
+        </div>
     );
 }

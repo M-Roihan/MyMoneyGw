@@ -23,7 +23,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan', fn() => Inertia::render('Laporan'))->name('laporan');
     Route::get('/about', fn() => Inertia::render('AboutUs'))->name('about');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // ===== PROFILE PAGE (Modern UI with AppLayout) =====
+    Route::get('/profile', fn() => Inertia::render('Profile/Profile'))->name('profile.show');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
@@ -62,6 +63,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/accounts', [AccountController::class, 'store']);
     Route::put('/api/accounts/{account}', [AccountController::class, 'update']);
     Route::delete('/api/accounts/{account}', [AccountController::class, 'destroy']);
+
+    // ===== API PROFILE (User Profile Management) =====
+    Route::get('/api/profile', [ProfileController::class, 'getProfile'])->name('api.profile.show');
+    Route::put('/api/profile/username', [ProfileController::class, 'updateUsername'])->name('api.profile.update-username');
+    Route::put('/api/profile/password', [ProfileController::class, 'updatePassword'])->name('api.profile.update-password');
+    Route::post('/api/profile/photo', [ProfileController::class, 'updatePhotoProfile'])->name('api.profile.update-photo');
 });
 
 require __DIR__ . '/auth.php';

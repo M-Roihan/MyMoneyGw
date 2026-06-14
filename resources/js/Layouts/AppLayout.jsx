@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, usePage, router, Head } from '@inertiajs/react';
+import { apiFetch } from '@/utils/api';
 
 export default function AppLayout({ children, title }) {
     const { url, props } = usePage();
     const { auth } = props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
 
     const userInitials = auth?.user?.name
         ? auth.user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
         : 'U';
+
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const response = await apiFetch("/api/profile");
+                if (response.success) {
+                    setUserProfile(response.data);
+                }
+            } catch (err) {
+                console.error("Gagal mengambil profil pengguna:", err.message);
+            }
+        };
+
+        fetchUserProfile();
+    }, []);
 
     const menuItems = [
         { name: 'Dashboard', icon: '🏠', path: '/dashboard' },
@@ -86,15 +103,26 @@ export default function AppLayout({ children, title }) {
 
                 {/* User Info & Logout */}
                 <div className="p-4 border-t border-gray-50">
-                    <div className="flex items-center gap-3 px-2 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm">
-                            {userInitials}
+                    <Link 
+                        href="/profile"
+                        className="flex items-center gap-3 px-2 mb-4 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm flex-shrink-0 overflow-hidden">
+                            {userProfile?.photo_profile ? (
+                                <img
+                                    src={userProfile.photo_profile}
+                                    alt={auth?.user?.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                userInitials
+                            )}
                         </div>
                         <div className="flex-1 overflow-hidden">
                             <p className="text-sm font-bold text-slate-900 truncate">{auth?.user?.name || 'User'}</p>
                             <p className="text-xs text-slate-500 truncate">{auth?.user?.email || ''}</p>
                         </div>
-                    </div>
+                    </Link>
                     <button 
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 font-medium transition-colors text-left"

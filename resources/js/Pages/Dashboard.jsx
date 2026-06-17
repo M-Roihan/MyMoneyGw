@@ -536,9 +536,7 @@ export default function DashboardPremium() {
                                         fontWeight: 600,
                                         marginTop: "8px",
                                     }}
-                                >
-                                    Lihat detail transaksi →
-                                </p>
+                                ></p>
                             </div>
                         ))}
                     </div>
@@ -647,8 +645,7 @@ export default function DashboardPremium() {
                                                 ? tx.category
                                                 : "Default";
                                         const cs = categoryStyle[styleKey];
-                                        const isIncome =
-                                            tx.type === "income";
+                                        const isIncome = tx.type === "income";
 
                                         return (
                                             <div
@@ -1195,7 +1192,10 @@ export default function DashboardPremium() {
                                         onChange={(e) =>
                                             setForm((f) => ({
                                                 ...f,
-                                                amount: e.target.value.replace(/\D/g, ""),
+                                                amount: e.target.value.replace(
+                                                    /\D/g,
+                                                    "",
+                                                ),
                                             }))
                                         }
                                         placeholder="cth: 500000"

@@ -1,14 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import AppLayout from '@/Layouts/AppLayout';
-import { apiFetch } from '@/utils/api';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from 'recharts';
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import AppLayout from "@/Layouts/AppLayout";
+import { apiFetch } from "@/utils/api";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip as RechartsTooltip,
+    Legend,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+} from "recharts";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import * as XLSX from "xlsx";
 
-const formatRupiahFull = (v) => `Rp ${Math.round(v).toLocaleString('id-ID')}`;
+const formatRupiahFull = (v) => `Rp ${Math.round(v).toLocaleString("id-ID")}`;
 const formatRupiahShort = (v) => {
-    if (v >= 1000000) return `${(v / 1000000).toFixed(1).replace('.0', '')}Jt`;
+    if (v >= 1000000) return `${(v / 1000000).toFixed(1).replace(".0", "")}Jt`;
     if (v >= 1000) return `${(v / 1000).toFixed(0)}Rb`;
     return v;
 };
@@ -20,7 +32,9 @@ const renderLegendText = (value, entry) => {
 export default function Laporan() {
     const [dataSummary, setDataSummary] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [monthFilter, setMonthFilter] = useState('Bulan Ini');
+    const [monthFilter, setMonthFilter] = useState("Bulan Ini");
+    const [exporting, setExporting] = useState(false);
+    const reportRef = useRef(null);
 
     useEffect(() => {
         const fetchSummary = async () => {
@@ -39,17 +53,114 @@ export default function Laporan() {
         fetchSummary();
     }, [monthFilter]);
 
-    // Data parsing
+    // Export Functions
+    const exportToPDF = async () => {
+        if (!reportRef.current) return;
+
+        try {
+            setExporting(true);
+            const canvas = await html2canvas(reportRef.current, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: "#ffffff",
+            });
+
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF({
+                orientation: "landscape",
+                unit: "mm",
+                format: "a4",
+            });
+
+            const imgWidth = pdf.internal.pageSize.getWidth() - 20;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 10;
+
+            pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+            heightLeft -= pdf.internal.pageSize.getHeight() - 20;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+                heightLeft -= pdf.internal.pageSize.getHeight();
+            }
+
+            pdf.save(
+                `Laporan-Keuangan-${monthFilter}-${new Date().toISOString().split("T")[0]}.pdf`,
+            );
+        } catch (error) {
+            console.error("Error exporting PDF:", error);
+            alert("Gagal mengexport ke PDF");
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const exportToExcel = () => {
+        try {
+            setExporting(true);
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Tren 6 Bulan
+            const tren6BulanData = tren6Bulan.map((item) => ({
+                Bulan: item.bulan,
+                Pemasukan: item.pemasukan,
+                Pengeluaran: item.pengeluaran,
+            }));
+            const ws1 = XLSX.utils.json_to_sheet(tren6BulanData);
+            XLSX.utils.book_append_sheet(wb, ws1, "Tren 6 Bulan");
+
+            // Sheet 2: Pengeluaran Per Kategori
+            const kategoriData = sortedKategori.map((item) => {
+                const pct =
+                    totalPengeluaranKategori > 0
+                        ? (item.total / totalPengeluaranKategori) * 100
+                        : 0;
+                return {
+                    Kategori: item.kategori,
+                    "Total Pengeluaran": item.total,
+                    Persentase: pct.toFixed(2) + "%",
+                };
+            });
+            kategoriData.push({
+                Kategori: "Total Keseluruhan",
+                "Total Pengeluaran": totalPengeluaranKategori,
+                Persentase: "100%",
+            });
+            const ws2 = XLSX.utils.json_to_sheet(kategoriData);
+            XLSX.utils.book_append_sheet(wb, ws2, "Pengeluaran per Kategori");
+
+            // Set column widths
+            ws1["!cols"] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }];
+            ws2["!cols"] = [{ wch: 20 }, { wch: 18 }, { wch: 12 }];
+
+            XLSX.writeFile(
+                wb,
+                `Laporan-Keuangan-${monthFilter}-${new Date().toISOString().split("T")[0]}.xlsx`,
+            );
+        } catch (error) {
+            console.error("Error exporting Excel:", error);
+            alert("Gagal mengexport ke Excel");
+        } finally {
+            setExporting(false);
+        }
+    };
     const tren6Bulan = dataSummary?.tren_6_bulan || [];
     const pengeluaranPerKategori = dataSummary?.pengeluaran_per_kategori || [];
-    
+
     // Sort descending
     const sortedKategori = useMemo(() => {
         return [...pengeluaranPerKategori].sort((a, b) => b.total - a.total);
     }, [pengeluaranPerKategori]);
 
     const totalPengeluaranKategori = useMemo(() => {
-        return pengeluaranPerKategori.reduce((acc, curr) => acc + parseFloat(curr.total), 0);
+        return pengeluaranPerKategori.reduce(
+            (acc, curr) => acc + parseFloat(curr.total),
+            0,
+        );
     }, [pengeluaranPerKategori]);
 
     const CustomTooltipBar = ({ active, payload, label }) => {
@@ -58,7 +169,11 @@ export default function Laporan() {
                 <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-100">
                     <p className="font-bold text-slate-800 mb-2">{label}</p>
                     {payload.map((entry, index) => (
-                        <p key={`item-${index}`} style={{ color: entry.color }} className="text-sm font-semibold">
+                        <p
+                            key={`item-${index}`}
+                            style={{ color: entry.color }}
+                            className="text-sm font-semibold"
+                        >
                             {entry.name}: {formatRupiahFull(entry.value)}
                         </p>
                     ))}
@@ -71,25 +186,53 @@ export default function Laporan() {
     const CustomTooltipPie = ({ active, payload }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
-            const percent = totalPengeluaranKategori > 0 ? (data.total / totalPengeluaranKategori) * 100 : 0;
+            const percent =
+                totalPengeluaranKategori > 0
+                    ? (data.total / totalPengeluaranKategori) * 100
+                    : 0;
             return (
                 <div className="bg-white p-3 rounded-xl shadow-lg border border-slate-100 flex flex-col gap-1">
-                    <p className="font-bold text-slate-800" style={{ color: data.warna }}>{data.kategori}</p>
-                    <p className="text-sm font-semibold text-slate-600">{formatRupiahFull(data.total)}</p>
-                    <p className="text-xs text-slate-400">{percent.toFixed(1)}% dari total</p>
+                    <p
+                        className="font-bold text-slate-800"
+                        style={{ color: data.warna }}
+                    >
+                        {data.kategori}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-600">
+                        {formatRupiahFull(data.total)}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                        {percent.toFixed(1)}% dari total
+                    </p>
                 </div>
             );
         }
         return null;
     };
 
-    const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+    const renderCustomizedLabel = ({
+        cx,
+        cy,
+        midAngle,
+        innerRadius,
+        outerRadius,
+        percent,
+        index,
+    }) => {
         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
         const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
         const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
         if (percent < 0.05) return null; // Don't show label for very small slices
         return (
-            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="12px" fontWeight="bold">
+            <text
+                x={x}
+                y={y}
+                fill="white"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize="12px"
+                fontWeight="bold"
+            >
                 {`${(percent * 100).toFixed(0)}%`}
             </text>
         );
@@ -117,7 +260,7 @@ export default function Laporan() {
                                 Analisis pemasukan dan pengeluaran Anda.
                             </p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col sm:flex-row items-center gap-3">
                             <select
                                 value={monthFilter}
                                 onChange={(e) => setMonthFilter(e.target.value)}
@@ -127,6 +270,46 @@ export default function Laporan() {
                                 <option value="Bulan Lalu">Bulan Lalu</option>
                                 <option value="Tahun Ini">Tahun Ini</option>
                             </select>
+                            <button
+                                onClick={exportToPDF}
+                                disabled={exporting || loading}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-semibold rounded-xl transition-all shadow-sm whitespace-nowrap"
+                            >
+                                <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 19l9 2-9-18-9 18 9-2m0 0v-8m0 8H3m6-6h12"
+                                    />
+                                </svg>
+                                {exporting ? "Mengekspor..." : "PDF"}
+                            </button>
+                            <button
+                                onClick={exportToExcel}
+                                disabled={exporting || loading}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white font-semibold rounded-xl transition-all shadow-sm whitespace-nowrap"
+                            >
+                                <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 19l9 2-9-18-9 18 9-2m0 0v-8m0 8H3m6-6h12"
+                                    />
+                                </svg>
+                                {exporting ? "Mengekspor..." : "Excel"}
+                            </button>
                         </div>
                     </header>
 
@@ -135,7 +318,7 @@ export default function Laporan() {
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-8">
+                        <div ref={reportRef} className="flex flex-col gap-8">
                             {/* SECTION 1 - Bar Chart */}
                             <div className="bg-white rounded-3xl shadow-sm p-6 md:p-8 border border-slate-100">
                                 <h2 className="text-lg font-bold text-slate-800 mb-6">

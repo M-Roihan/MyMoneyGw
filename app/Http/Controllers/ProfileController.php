@@ -17,9 +17,8 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
+    //tampilan form user profile
+
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
@@ -28,9 +27,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
+    //update user profile
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
@@ -44,9 +41,7 @@ class ProfileController extends Controller
         return Redirect::route('profile.edit');
     }
 
-    /**
-     * Delete the user's account.
-     */
+    //hapus akun user
     public function destroy(Request $request): RedirectResponse
     {
         $request->validate([
@@ -65,9 +60,7 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    /**
-     * Get current user profile (API)
-     */
+    //get user saat ini
     public function getProfile(Request $request)
     {
         $user = $request->user();
@@ -84,9 +77,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update username (API)
-     */
+    //update username
     public function updateUsername(UpdateUsernameRequest $request)
     {
         try {
@@ -109,9 +100,7 @@ class ProfileController extends Controller
         }
     }
 
-    /**
-     * Update password (API)
-     */
+    //update password
     public function updatePassword(UpdatePasswordRequest $request)
     {
         try {
@@ -135,20 +124,18 @@ class ProfileController extends Controller
         }
     }
 
-    /**
-     * Update photo profile (API)
-     */
+    //update foto profile
     public function updatePhotoProfile(UpdatePhotoProfileRequest $request)
     {
         try {
             $user = $request->user();
 
-            // Delete old photo if exists
+            //hapus foto profile lama
             if ($user->photo_profile && Storage::disk('public')->exists($user->photo_profile)) {
                 Storage::disk('public')->delete($user->photo_profile);
             }
 
-            // Store new photo
+            //foto profile baru
             if ($request->hasFile('photo_profile')) {
                 $path = $request->file('photo_profile')->store('profile-photos', 'public');
                 $user->update(['photo_profile' => $path]);

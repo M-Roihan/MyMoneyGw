@@ -12,14 +12,14 @@ export default function UpdatePhotoProfileForm({ onProfileUpdated }) {
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Validate file type
+            //validasi tipe file
             const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
             if (!validTypes.includes(file.type)) {
                 setErrors({ file: 'Format file harus jpeg, png, jpg, atau gif' });
                 return;
             }
 
-            // Validate file size (2MB)
+            //validasi ukuran file maks 2 mb
             if (file.size > 2 * 1024 * 1024) {
                 setErrors({ file: 'Ukuran file tidak boleh lebih dari 2MB' });
                 return;

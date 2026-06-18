@@ -922,20 +922,6 @@ export default function DashboardPremium() {
                                         );
                                     })
                                 )}
-                                <button
-                                    style={{
-                                        width: "100%",
-                                        padding: "12px",
-                                        borderRadius: "12px",
-                                        border: "1px solid #e2e8f0",
-                                        background: "none",
-                                        fontWeight: 700,
-                                        cursor: "pointer",
-                                        color: colors.textMain,
-                                    }}
-                                >
-                                    Tambah Tabungan
-                                </button>
                             </div>
                         </aside>
                     </div>
